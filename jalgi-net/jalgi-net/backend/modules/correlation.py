@@ -22,6 +22,7 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
 import database as db
+from modules import ai_analyzer
 
 
 class CorrelationEngine:
@@ -141,6 +142,11 @@ class CorrelationEngine:
         attack_chain = list(attack_types)
         description  = self._describe_chain(ip, attack_chain, risk_score, len(events))
 
+        # Generate AI summary if enabled
+        ai_data = None
+        if config.MODULES.get("ai_analysis", True):
+            ai_data = ai_analyzer.analyze_threat(ip, attack_chain, len(events), risk_score)
+
         db.upsert_correlated_threat(
             source_ip=ip,
             risk_score=risk_score,
@@ -148,6 +154,7 @@ class CorrelationEngine:
             attack_chain=attack_chain,
             description=description,
             event_ids=event_ids,
+            ai_data=ai_data,
         )
 
         # Fire a Correlated alert if high enough

@@ -13,6 +13,13 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "jalgi_net.db")
 
+# ─────────────────────────────────────────────
+# SUPABASE / POSTGRES SETTINGS
+# ─────────────────────────────────────────────
+# Set USE_SUPABASE to True to use external PostgreSQL (Supabase)
+USE_SUPABASE = os.getenv("USE_SUPABASE", "False").lower() == "true"
+SUPABASE_URL = os.getenv("SUPABASE_DB_URL", "postgresql://postgres:password@db.supabase.co:5432/postgres")
+
 # IDS log file paths (for real Snort/Suricata deployments)
 SNORT_LOG_PATH = os.getenv("SNORT_LOG_PATH", "/var/log/snort/alert")
 SURICATA_LOG_PATH = os.getenv("SURICATA_LOG_PATH", "/var/log/suricata/eve.json")
@@ -74,6 +81,7 @@ MODULES = {
     "ids_integration":  True,
     "correlation":      True,
     "geo_ip":           True,
+    "ai_analysis":      True,
     "auto_block":       False,   # Simulation only – doesn't touch firewall rules
 }
 

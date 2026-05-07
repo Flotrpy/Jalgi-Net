@@ -12,6 +12,7 @@ window.JalgiNet = {
   stats: {},
   refreshTimers: [],
   notifiedIds: new Set(),
+  socket: null,
 };
 
 // ── API helper ────────────────────────────────────────────────────────────────
@@ -34,6 +35,7 @@ const TAB_TITLES = {
   traffic:  ['Traffic Analysis',    'Packet flow analysis and rate monitoring'],
   ids:      ['IDS Events',          'Parsed Snort / Suricata intrusion alerts'],
   threats:  ['Correlated Threats',  'Multi-stage attack correlation & risk scoring'],
+  devices:  ['Devices',             'Security profiles for active network assets'],
   settings: ['Settings',            'Configure thresholds, modules & data management'],
 };
 
@@ -110,10 +112,8 @@ function setHealthBadge(elId, active) {
 }
 
 // ── Global KPI bar (topbar) ───────────────────────────────────────────────────
-async function refreshTopbar() {
-  const data = await apiFetch('/api/alerts/summary');
-  if (!data) return;
-  const s = data.data || {};
+function updateUIFromStats(s) {
+  if (!s) return;
   document.getElementById('topbarRPS').textContent =
     s.current_rps != null ? s.current_rps.toFixed(1) : '—';
   document.getElementById('topbarCritical').textContent =
@@ -125,6 +125,20 @@ async function refreshTopbar() {
   document.getElementById('threatsBadge').textContent = s.active_threats ?? 0;
 
   window.JalgiNet.stats = s;
+
+  // Also update overview KPIs if on that tab
+  if (window.JalgiNet.currentTab === 'overview') {
+    if (typeof refreshOverviewKPIs === 'function') {
+      refreshOverviewKPIs(s);
+    }
+  }
+}
+
+async function refreshTopbar() {
+  const data = await apiFetch('/api/alerts/summary');
+  if (data && data.status === 'ok') {
+    updateUIFromStats(data.data);
+  }
 }
 
 // ── Toast notifications ───────────────────────────────────────────────────────
@@ -185,12 +199,42 @@ function attackPillClass(type) {
 }
 window.attackPillClass = attackPillClass;
 
+// ── WebSocket setup ──────────────────────────────────────────────────────────
+function initWebSockets() {
+  const socket = io(API_BASE);
+  window.JalgiNet.socket = socket;
+
+  socket.on('connect', () => {
+    console.log('[WS] Connected to server');
+  });
+
+  socket.on('update_stats', (stats) => {
+    updateUIFromStats(stats);
+  });
+
+  socket.on('new_alert', (alert) => {
+    if (alert.severity === 'Critical') {
+      showToast('Critical Alert', alert.description, 'Critical');
+    }
+    // Refresh alerts if on tab
+    if (window.JalgiNet.currentTab === 'alerts' && typeof refreshAlerts === 'function') {
+      refreshAlerts();
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.warn('[WS] Disconnected');
+  });
+}
+
 // ── Boot sequence ─────────────────────────────────────────────────────────────
 async function boot() {
   await checkHealth();
   await refreshTopbar();
-  setInterval(refreshTopbar, REFRESH_INTERVAL);
-  setInterval(checkHealth,   15000);
+
+  initWebSockets();
+
+  setInterval(checkHealth, 15000);
 
   // Notify each tab's init function if defined
   switchTab('overview');

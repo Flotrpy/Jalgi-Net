@@ -13,6 +13,26 @@ function buildChainHTML(chain) {
 
 function buildThreatCard(t) {
   const scoreFixed = parseFloat(t.risk_score).toFixed(1);
+
+  const aiSection = t.ai_summary ? `
+    <div class="ai-analysis-box" style="margin-top:15px; padding:12px; background:rgba(0,212,255,0.05); border-radius:8px; border:1px solid rgba(0,212,255,0.2);">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; color:var(--cyan); font-weight:600; font-size:0.8rem;">
+        <i data-lucide="sparkles" style="width:14px; height:14px;"></i> AI SECURITY SUMMARY
+      </div>
+      <p style="font-size:0.8rem; color:var(--text-primary); margin-bottom:8px;">${t.ai_summary}</p>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:0.75rem;">
+        <div>
+          <div style="color:var(--red); font-weight:600; margin-bottom:2px;">SECURITY IMPACT</div>
+          <div style="color:var(--text-secondary)">${t.security_impact || 'N/A'}</div>
+        </div>
+        <div>
+          <div style="color:var(--green); font-weight:600; margin-bottom:2px;">RECOMMENDED ACTIONS</div>
+          <div style="color:var(--text-secondary)">${t.recommended_actions || 'N/A'}</div>
+        </div>
+      </div>
+    </div>
+  ` : '';
+
   return `
     <div class="threat-card ${t.severity}">
       <div class="threat-card-header">
@@ -33,6 +53,7 @@ function buildThreatCard(t) {
           <span><b>Last Seen</b>${formatTimestamp(t.last_seen)}</span>
           <span><b>Events</b>${(t.event_ids || []).length} linked</span>
         </div>
+        ${aiSection}
         <button class="threat-block-btn" onclick="blockThreatIp('${t.source_ip}')">⛔ Block ${t.source_ip}</button>
       </div>
     </div>`;
@@ -89,6 +110,7 @@ async function refreshThreats() {
     return;
   }
   listEl.innerHTML = threats.map(buildThreatCard).join('');
+  if (window.lucide) lucide.createIcons();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
