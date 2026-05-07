@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="JalgiNet – Real-time SOC monitoring platform combining DoS detection, IDS integration and threat correlation for enterprise network security." />
+  <title>JalgiNet | SOC Security Monitor</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Main stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════ SIDEBAR NAV ═══════════════ -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">JALGINET</span>
+      </div>
+    </div>
+
+    <div class="sidebar-status">
+      <div id="systemStatusDot" class="status-dot"></div>
+      <span id="systemStatusLabel">Connecting...</span>
+    </div>
+    <div class="sidebar-info" id="sidebarCaptureInfo" style="font-size:0.65rem; color:var(--text-muted); margin-top:4px; font-family:var(--font-mono)">
+      MODE: SIMULATED
+    </div>
+
+    <ul class="nav-links">
+      <li class="nav-item active" data-tab="overview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Overview
+      </li>
+      <li class="nav-item" data-tab="alerts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Alerts Feed
+        <span class="nav-badge" id="alertsBadge">0</span>
+      </li>
+      <li class="nav-item" data-tab="traffic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Traffic Analysis
+      </li>
+      <li class="nav-item" data-tab="ids">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        IDS Events
+        <span class="nav-badge ids-badge" id="idsBadge">0</span>
+      </li>
+      <li class="nav-item" data-tab="threats">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Correlated Threats
+        <span class="nav-badge critical-badge" id="threatsBadge">0</span>
+      </li>
+      <li class="nav-item" data-tab="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07"/><path d="M4.93 4.93A10 10 0 0 1 19.07 19.07"/></svg>
+        Settings
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <span class="footer-time" id="clockDisplay"></span>
+    </div>
+  </nav>
+
+  <!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+  <main class="main-content" id="mainContent">
+
+    <!-- Header bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title" id="pageTitle">Overview</h1>
+        <span class="page-subtitle" id="pageSubtitle">Real-time network threat monitoring</span>
+      </div>
+      <div class="topbar-right">
+        <div class="kpi-mini">
+          <span class="kpi-mini-label">RPS</span>
+          <span class="kpi-mini-val" id="topbarRPS">—</span>
+        </div>
+        <div class="kpi-mini danger">
+          <span class="kpi-mini-label">CRITICAL</span>
+          <span class="kpi-mini-val" id="topbarCritical">0</span>
+        </div>
+        <div class="scan-indicator">
+          <span class="scan-dot"></span>
+          <span>LIVE</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tab panels -->
+    <div class="tab-panels">
+
+      <!-- ── OVERVIEW ─────────────────────────────── -->
+      <section class="tab-panel active" id="panel-overview">
+        <!-- KPI cards row -->
+        <div class="kpi-grid">
+          <div class="kpi-card" id="kpiTotalAlerts">
+            <div class="kpi-icon alerts-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div class="kpi-data">
+              <span class="kpi-num" id="totalAlertsNum">0</span>
+              <span class="kpi-label">Total Alerts</span>
+            </div>
+            <div class="kpi-trend" id="totalAlertsTrend">↑</div>
+          </div>
+          <div class="kpi-card danger" id="kpiActiveThreats">
+            <div class="kpi-icon threat-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div class="kpi-data">
+              <span class="kpi-num" id="activeThreatsNum">0</span>
+              <span class="kpi-label">Active Threats</span>
+            </div>
+          </div>
+          <div class="kpi-card warning" id="kpiCritical">
+            <div class="kpi-icon critical-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="kpi-data">
+              <span class="kpi-num" id="criticalAlertsNum">0</span>
+              <span class="kpi-label">Critical Alerts</span>
+            </div>
+          </div>
+          <div class="kpi-card info" id="kpiBlocked">
+            <div class="kpi-icon blocked-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            </div>
+            <div class="kpi-data">
+              <span class="kpi-num" id="blockedIpsNum">0</span>
+              <span class="kpi-label">Blocked IPs</span>
+            </div>
+          </div>
+          <div class="kpi-card ids-card" id="kpiIdsEvents">
+            <div class="kpi-icon ids-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+            <div class="kpi-data">
+              <span class="kpi-num" id="idsEventsNum">0</span>
+              <span class="kpi-label">IDS Events</span>
+            </div>
+          </div>
+          <div class="kpi-card rps-card">
+            <div class="kpi-icon rps-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div class="kpi-data">
+              <span class="kpi-num" id="currentRpsNum">0</span>
+              <span class="kpi-label">Packets/sec</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live traffic chart -->
+        <div class="dashboard-row">
+          <div class="card chart-card full-card">
+            <div class="card-header">
+              <h2>Live Traffic</h2>
+              <span class="card-badge pulse">LIVE</span>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="overviewTrafficChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Severity breakdown + System health -->
+        <div class="dashboard-row">
+          <div class="card chart-card">
+            <div class="card-header"><h2>Alert Severity Breakdown</h2></div>
+            <div class="chart-wrap chart-sm">
+              <canvas id="severityDonutChart"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h2>System Health</h2></div>
+            <div class="health-panel" id="healthPanel">
+              <div class="health-row">
+                <span>Packet Capture</span>
+                <span class="health-badge green" id="hCapture">ACTIVE</span>
+              </div>
+              <div class="health-row">
+                <span>DoS Detection</span>
+                <span class="health-badge green" id="hDos">ACTIVE</span>
+              </div>
+              <div class="health-row">
+                <span>IDS Integration</span>
+                <span class="health-badge green" id="hIds">ACTIVE</span>
+              </div>
+              <div class="health-row">
+                <span>Correlation Engine</span>
+                <span class="health-badge green" id="hCorr">ACTIVE</span>
+              </div>
+              <div class="health-row">
+                <span>GeoIP Lookup</span>
+                <span class="health-badge green" id="hGeo">ACTIVE</span>
+              </div>
+              <div class="health-row">
+                <span>Auto-Block</span>
+                <span class="health-badge yellow" id="hBlock">SIMULATION</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h2>Recent Critical Alerts</h2></div>
+            <ul class="mini-alert-list" id="recentCriticalList"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ALERTS FEED ───────────────────────────── -->
+      <section class="tab-panel" id="panel-alerts">
+        <div class="toolbar">
+          <input class="search-input" id="alertSearch" placeholder="🔍  Search alerts…" />
+          <div class="filter-group">
+            <button class="filter-btn active" data-filter="">All</button>
+            <button class="filter-btn" data-filter="Critical">Critical</button>
+            <button class="filter-btn" data-filter="High">High</button>
+            <button class="filter-btn" data-filter="Medium">Medium</button>
+            <button class="filter-btn" data-filter="Low">Low</button>
+          </div>
+          <div class="filter-group">
+            <button class="filter-btn type-btn active" data-type="">All Types</button>
+            <button class="filter-btn type-btn" data-type="DoS">DoS</button>
+            <button class="filter-btn type-btn" data-type="IDS">IDS</button>
+            <button class="filter-btn type-btn" data-type="Correlated">Correlated</button>
+          </div>
+        </div>
+
+        <div class="card full-card">
+          <div class="card-header">
+            <h2>Alerts Feed</h2>
+            <span class="card-badge pulse">AUTO-REFRESH</span>
+          </div>
+          <div class="alert-stream" id="alertStream"></div>
+        </div>
+      </section>
+
+      <!-- ── TRAFFIC ANALYSIS ──────────────────────── -->
+      <section class="tab-panel" id="panel-traffic">
+        <div class="dashboard-row">
+          <div class="card chart-card wide">
+            <div class="card-header">
+              <h2>Requests Per Second</h2>
+              <span class="card-badge pulse">LIVE</span>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="trafficRpsChart"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-row">
+          <div class="card chart-card">
+            <div class="card-header"><h2>Protocol Distribution</h2></div>
+            <div class="chart-wrap chart-sm">
+              <canvas id="protocolChart"></canvas>
+            </div>
+          </div>
+          <div class="card chart-card">
+            <div class="card-header"><h2>Top IPs by Volume</h2></div>
+            <div class="chart-wrap">
+              <canvas id="topIpsChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── IDS EVENTS ────────────────────────────── -->
+      <section class="tab-panel" id="panel-ids">
+        <div class="toolbar">
+          <input class="search-input" id="idsSearch" placeholder="🔍  Search IDS events…" />
+          <div class="filter-group" id="attackTypeFilters">
+            <button class="filter-btn active" data-attack="">All Types</button>
+          </div>
+        </div>
+        <div class="card full-card">
+          <div class="card-header">
+            <h2>IDS Events</h2>
+            <span class="card-stat" id="idsEventCount">0 events</span>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="idsTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Timestamp</th>
+                  <th>Attack Type</th>
+                  <th>Source IP</th>
+                  <th>Dest IP:Port</th>
+                  <th>Rule ID</th>
+                  <th>Message</th>
+                  <th>Severity</th>
+                </tr>
+              </thead>
+              <tbody id="idsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── CORRELATED THREATS ────────────────────── -->
+      <section class="tab-panel" id="panel-threats">
+        <div class="dashboard-row">
+          <div class="card">
+            <div class="card-header"><h2>Threat Summary</h2></div>
+            <div class="threat-kpis" id="threatKpis"></div>
+          </div>
+        </div>
+        <div class="threat-list" id="threatList"></div>
+      </section>
+
+      <!-- ── SETTINGS ──────────────────────────────── -->
+      <section class="tab-panel" id="panel-settings">
+        <div class="settings-grid">
+
+          <div class="card settings-card">
+            <div class="card-header"><h2>🎚️ DoS Detection Thresholds</h2></div>
+            <div class="settings-body">
+              <label class="setting-row">
+                <span>Detection Window (seconds)</span>
+                <input type="number" class="setting-input" id="s-window" value="60" min="10" max="300" />
+              </label>
+              <label class="setting-row">
+                <span>Low threshold (pkts/window)</span>
+                <input type="number" class="setting-input" id="s-low" value="50" min="10" />
+              </label>
+              <label class="setting-row">
+                <span>Medium threshold</span>
+                <input type="number" class="setting-input" id="s-medium" value="150" min="10" />
+              </label>
+              <label class="setting-row">
+                <span>High threshold</span>
+                <input type="number" class="setting-input" id="s-high" value="300" min="10" />
+              </label>
+              <label class="setting-row">
+                <span>Critical threshold</span>
+                <input type="number" class="setting-input" id="s-critical" value="600" min="10" />
+              </label>
+              <label class="setting-row">
+                <span>SYN Flood Ratio</span>
+                <input type="number" class="setting-input" id="s-syn" value="0.85" min="0.5" max="1" step="0.05" />
+              </label>
+            </div>
+          </div>
+
+          <div class="card settings-card">
+            <div class="card-header"><h2>🔧 Module Toggles</h2></div>
+            <div class="settings-body">
+              <label class="toggle-row">
+                <span style="flex: 1">Simulation Mode</span>
+                <div style="display:flex; align-items:center; gap:12px; justify-content: flex-end; min-width: 240px;">
+                  <span id="captureStatusBadge" class="health-badge blue" style="font-size:0.65rem; min-width: 130px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">SIMULATED</span>
+                  <div class="toggle-wrap" style="flex-shrink: 0">
+                    <input type="checkbox" id="s-simMode" checked />
+                    <span class="toggle-slider"></span>
+                  </div>
+                </div>
+              </label>
+              <label class="toggle-row">
+                <span>DoS Detection</span>
+                <div class="toggle-wrap">
+                  <input type="checkbox" id="m-dos" checked />
+                  <span class="toggle-slider"></span>
+                </div>
+              </label>
+              <label class="toggle-row">
+                <span>IDS Integration</span>
+                <div class="toggle-wrap">
+                  <input type="checkbox" id="m-ids" checked />
+                  <span class="toggle-slider"></span>
+                </div>
+              </label>
+              <label class="toggle-row">
+                <span>Correlation Engine</span>
+                <div class="toggle-wrap">
+                  <input type="checkbox" id="m-corr" checked />
+                  <span class="toggle-slider"></span>
+                </div>
+              </label>
+              <label class="toggle-row">
+                <span>GeoIP Lookup</span>
+                <div class="toggle-wrap">
+                  <input type="checkbox" id="m-geo" checked />
+                  <span class="toggle-slider"></span>
+                </div>
+              </label>
+              <label class="toggle-row">
+                <span>Auto-Block (Simulation)</span>
+                <div class="toggle-wrap">
+                  <input type="checkbox" id="m-block" />
+                  <span class="toggle-slider"></span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="card settings-card">
+            <div class="card-header"><h2>⚙️ Correlation Settings</h2></div>
+            <div class="settings-body">
+              <label class="setting-row">
+                <span>Correlation Window (seconds)</span>
+                <input type="number" class="setting-input" id="s-corrWindow" value="300" min="60" max="3600" />
+              </label>
+            </div>
+          </div>
+
+          <div class="card settings-card">
+            <div class="card-header"><h2>🚫 Blocked IPs</h2></div>
+            <div class="settings-body">
+              <div class="blocked-ips-list" id="blockedIpsList">
+                <p class="muted">No IPs currently blocked.</p>
+              </div>
+              <div class="block-form">
+                <input class="setting-input" id="blockIpInput" placeholder="Enter IP to block…" />
+                <button class="btn btn-danger" id="blockIpBtn">Block IP</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card settings-card actions-card">
+            <div class="card-header"><h2>🗑️ Data Management</h2></div>
+            <div class="settings-body actions-body">
+              <button class="btn btn-danger" id="clearLogsBtn">⚠️ Clear All Logs</button>
+              <button class="btn btn-primary" id="exportJsonBtn">📥 Export JSON</button>
+              <p class="muted small" id="settingsSaveStatus"></p>
+            </div>
+          </div>
+
+          <div class="card settings-card">
+            <div class="card-header"><h2>💾 Apply Settings</h2></div>
+            <div class="settings-body actions-body">
+              <button class="btn btn-success" id="saveSettingsBtn">✅ Save Settings</button>
+              <p class="muted small" id="settingsSaveMsg"></p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div><!-- /tab-panels -->
+  </main>
+
+  <!-- Notification toast container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- JS modules -->
+  <script src="js/app.js"></script>
+  <script src="js/overview.js"></script>
+  <script src="js/alerts.js"></script>
+  <script src="js/traffic.js"></script>
+  <script src="js/ids.js"></script>
+  <script src="js/threats.js"></script>
+  <script src="js/settings.js"></script>
+</body>
+</html>
