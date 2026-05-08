@@ -1,0 +1,136 @@
+/app/jalgi-net/jalgi-net/backend/modules/ai_analyzer.py:8: FutureWarning:
+
+All support for the `google.generativeai` package has ended. It will no longer be receiving
+updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+See README for more details:
+
+https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+
+  import google.generativeai as genai
+
+╔═══════════════════════════════════════════════════════════╗
+║           JalgiNet – SOC Security Monitor v1.0            ║
+║     DoS Detection + IDS Integration + Threat Correlation  ║
+╚═══════════════════════════════════════════════════════════╝
+
+[DB] Schema initialized (SQLite).
+[PacketCapture] Started in SIMULATED mode.
+[DoSDetector] Started.
+[IDSParser] Started in SIMULATION mode.
+[Correlation] Engine started.
+[EngineManager] All engines running (Mode: Simulation)
+[JalgiNet] Dashboard → http://localhost:3000
+[IDSParser] Event [Critical] Malware C2 from 194.165.16.11
+[IDSParser] Event [Critical] Malware C2 from 193.32.162.44
+[IDSParser] Event [Low] Port Scan from 194.165.16.11
+[IDSParser] Event [Critical] Malware C2 from 178.128.23.55
+[IDSParser] Event [High] SQL Injection from 178.128.23.55
+[IDSParser] Event [Medium] XSS from 193.32.162.44
+[IDSParser] Event [Low] Port Scan from 91.108.4.41
+[IDSParser] Event [High] SQL Injection from 89.248.167.131
+[WS] Client connected
+[IDSParser] Event [Low] Port Scan from 77.247.108.163
+[IDSParser] Event [Medium] Directory Traversal from 198.50.128.0
+[IDSParser] Event [Critical] Remote Code Execution from 77.247.108.163
+[IDSParser] Event [Medium] XSS from 194.165.16.11
+[IDSParser] Event [Critical] Remote Code Execution from 5.188.206.14
+[IDSParser] Event [High] DNS Exfiltration from 193.32.162.44
+[IDSParser] Event [Medium] Directory Traversal from 194.165.16.11
+[IDSParser] Event [Medium] Directory Traversal from 89.248.167.131
+[IDSParser] Event [Medium] XSS from 77.247.108.163
+[IDSParser] Event [High] DNS Exfiltration from 103.21.244.0
+[IDSParser] Event [Low] Port Scan from 45.142.212.100
+[IDSParser] Event [Medium] Brute Force from 89.248.167.131
+[IDSParser] Event [Medium] Brute Force from 103.21.244.0
+[IDSParser] Event [Low] Port Scan from 103.21.244.0
+[DoSDetector] Alert [Low] 194.165.16.11 – High packet rate detected: 81 pkts in 60s window
+[IDSParser] Event [Critical] Remote Code Execution from 103.21.244.0
+[DoSDetector] Alert [Low] 103.21.244.0 – High packet rate detected: 101 pkts in 60s window
+[IDSParser] Event [Medium] XSS from 62.210.115.92
+[DoSDetector] Alert [Medium] 91.108.4.41 – High packet rate detected: 150 pkts in 60s window
+[IDSParser] Event [High] SQL Injection from 194.165.16.11
+[IDSParser] Event [Critical] Remote Code Execution from 193.32.162.44
+[IDSParser] Event [High] SQL Injection from 77.247.108.163
+[IDSParser] Event [High] DNS Exfiltration from 193.32.162.44
+[Correlation] Threat [Medium] 194.165.16.11 score=5.97 chain=['sql_injection', 'dos']
+[Correlation] Threat [High] 103.21.244.0 score=7.47 chain=['rce', 'port_scan', 'dos', 'brute_force']
+[IDSParser] Event [Medium] XSS from 91.108.4.41
+[DoSDetector] Alert [Low] 89.248.167.131 – High packet rate detected: 116 pkts in 60s window
+[WS] Client connected
+[IDSParser] Event [Critical] Remote Code Execution from 103.21.244.0
+[Correlation] Threat [Medium] 194.165.16.11 score=5.34 chain=['sql_injection', 'dos']
+[Correlation] Threat [Critical] 103.21.244.0 score=9.03 chain=['rce', 'port_scan', 'dos', 'brute_force']
+[IDSParser] Event [Medium] Directory Traversal from 185.220.101.42
+[IDSParser] Event [Critical] Remote Code Execution from 62.210.115.92
+[IDSParser] Event [High] SQL Injection from 178.128.23.55
+[IDSParser] Event [High] SQL Injection from 194.165.16.11
+[DoSDetector] Alert [High] 0.0.0.0/distributed – Distributed flood: 10 unique IPs, 160 total packets
+[IDSParser] Event [Medium] Directory Traversal from 5.188.206.14
+[Correlation] Threat [Medium] 194.165.16.11 score=5.81 chain=['sql_injection', 'dos']
+[DoSDetector] Alert [High] 0.0.0.0/distributed – Distributed flood: 10 unique IPs, 232 total packets
+[IDSParser] Event [Medium] XSS from 194.165.16.11
+[DoSDetector] Alert [Low] 185.220.101.42 – High packet rate detected: 134 pkts in 60s window
+[IDSParser] Event [Critical] Malware C2 from 178.128.23.55
+[IDSParser] Event [Low] Port Scan from 89.248.167.131
+[IDSParser] Event [Low] Port Scan from 193.32.162.44
+[IDSParser] Event [Critical] Malware C2 from 5.188.206.14
+[IDSParser] Event [Medium] Directory Traversal from 77.247.108.163
+[IDSParser] Event [Medium] Directory Traversal from 62.210.115.92
+[IDSParser] Event [Medium] Directory Traversal from 45.142.212.100
+[IDSParser] Event [Medium] XSS from 185.220.101.42
+[IDSParser] Event [Critical] Malware C2 from 5.188.206.14
+[IDSParser] Event [Medium] Directory Traversal from 193.32.162.44
+[IDSParser] Event [High] DNS Exfiltration from 45.142.212.100
+[DoSDetector] Alert [Medium] 62.210.115.92 – High packet rate detected: 166 pkts in 60s window
+[DoSDetector] Alert [High] 0.0.0.0/distributed – Distributed flood: 7 unique IPs, 181 total packets
+[IDSParser] Event [Critical] Malware C2 from 193.32.162.44
+[Correlation] Threat [Medium] 5.188.206.14 score=5.0 chain=['malware_c2']
+[IDSParser] Event [High] DNS Exfiltration from 194.165.16.11
+[IDSParser] Event [Medium] Brute Force from 185.220.101.42
+[DoSDetector] Alert [Low] 178.128.23.55 – High packet rate detected: 123 pkts in 60s window
+[IDSParser] Event [Critical] Malware C2 from 91.108.4.41
+[IDSParser] Event [Medium] Directory Traversal from 45.142.212.100
+[IDSParser] Event [Medium] XSS from 103.21.244.0
+[IDSParser] Event [Critical] Malware C2 from 103.21.244.0
+[Correlation] Threat [Medium] 178.128.23.55 score=5.69 chain=['malware_c2', 'dos']
+[IDSParser] Event [Medium] XSS from 91.108.4.41
+[IDSParser] Event [Medium] Directory Traversal from 103.21.244.0
+[IDSParser] Event [High] DNS Exfiltration from 198.50.128.0
+[IDSParser] Event [Medium] Brute Force from 5.188.206.14
+[IDSParser] Event [Critical] Remote Code Execution from 5.188.206.14
+[Correlation] Threat [Medium] 5.188.206.14 score=5.0 chain=['malware_c2', 'rce', 'brute_force']
+[IDSParser] Event [High] DNS Exfiltration from 193.32.162.44
+[IDSParser] Event [Medium] Directory Traversal from 178.128.23.55
+[IDSParser] Event [Critical] Remote Code Execution from 193.32.162.44
+[IDSParser] Event [Low] Port Scan from 194.165.16.11
+[IDSParser] Event [Critical] Remote Code Execution from 178.128.23.55
+[IDSParser] Event [High] SQL Injection from 62.210.115.92
+[IDSParser] Event [Critical] Malware C2 from 193.32.162.44
+[IDSParser] Event [Critical] Remote Code Execution from 77.247.108.163
+[IDSParser] Event [Low] Port Scan from 194.165.16.11
+[IDSParser] Event [High] DNS Exfiltration from 45.142.212.100
+[Correlation] Threat [Medium] 193.32.162.44 score=5.47 chain=['malware_c2', 'rce']
+[IDSParser] Event [High] DNS Exfiltration from 91.108.4.41
+[IDSParser] Event [Medium] XSS from 178.128.23.55
+[IDSParser] Event [High] DNS Exfiltration from 77.247.108.163
+[Correlation] Threat [Medium] 193.32.162.44 score=5.47 chain=['malware_c2', 'rce']
+[IDSParser] Event [Medium] Brute Force from 77.247.108.163
+[IDSParser] Event [Low] Port Scan from 103.21.244.0
+[IDSParser] Event [Medium] Directory Traversal from 193.32.162.44
+[DoSDetector] Alert [Low] 193.32.162.44 – High packet rate detected: 142 pkts in 60s window
+[IDSParser] Event [Critical] Malware C2 from 103.21.244.0
+[IDSParser] Event [High] DNS Exfiltration from 77.247.108.163
+[DoSDetector] Alert [High] 0.0.0.0/distributed – Distributed flood: 8 unique IPs, 163 total packets
+[IDSParser] Event [Medium] Brute Force from 194.165.16.11
+[IDSParser] Event [Critical] Malware C2 from 89.248.167.131
+[IDSParser] Event [High] SQL Injection from 45.142.212.100
+[IDSParser] Event [High] DNS Exfiltration from 194.165.16.11
+[IDSParser] Event [High] DNS Exfiltration from 91.108.4.41
+[IDSParser] Event [Low] Port Scan from 194.165.16.11
+[IDSParser] Event [Medium] Directory Traversal from 194.165.16.11
+[IDSParser] Event [Medium] Directory Traversal from 194.165.16.11
+[IDSParser] Event [Critical] Malware C2 from 91.108.4.41
+[IDSParser] Event [Medium] XSS from 178.128.23.55
+[IDSParser] Event [Medium] XSS from 77.247.108.163
+[IDSParser] Event [Low] Port Scan from 45.142.212.100
+[IDSParser] Event [Critical] Remote Code Execution from 178.128.23.55

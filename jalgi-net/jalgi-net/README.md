@@ -1,18 +1,18 @@
-# JalgiNet – SOC Security Monitor
+# JalgiNet – Modernized SOC Security Monitor
 
-> **A production-style hybrid cybersecurity monitoring platform** combining DoS/DDoS detection, IDS integration (Snort/Suricata), multi-source threat correlation, and a real-time SOC dashboard.
+> **A modernized production-style hybrid cybersecurity monitoring platform** featuring AI-powered threat analysis, real-time WebSockets, cloud-native storage (Supabase), and a glassmorphism SOC dashboard.
 
 ---
 
 ## 🧠 What is JalgiNet?
 
-JalgiNet simulates a real-world **Security Operations Center (SOC)** monitoring platform. It:
+JalgiNet simulates a real-world **Security Operations Center (SOC)** monitoring platform. This modernized version enhances the core detection engine with:
 
-- **Captures** live or simulated network traffic (packet-level)
-- **Detects** DoS/DDoS attacks using sliding-window rate analysis
-- **Integrates** with Snort/Suricata IDS log formats
-- **Correlates** multi-source events to detect multi-stage attacks
-- **Visualizes** everything in a dark-themed, real-time web dashboard
+- **AI Analysis**: Integrates Google Gemini 1.5 Flash to generate executive summaries, security impact assessments, and recommended actions for every correlated threat.
+- **Cloud Storage**: Support for **Supabase (PostgreSQL)** for enterprise-grade, external data persistence alongside local SQLite.
+- **Real-time Updates**: Upgraded from polling to **WebSockets (Socket.IO)** for instant alert streaming and live dashboard updates.
+- **Device Profiling**: A new **Devices** view that builds security profiles for every active IP on the network.
+- **Modern UI**: A complete visual overhaul using **glassmorphism**, **Lucide icons**, and a clean, emoji-free professional design.
 
 ---
 
@@ -21,33 +21,26 @@ JalgiNet simulates a real-world **Security Operations Center (SOC)** monitoring 
 ```
 jalgi-net/
 ├── backend/
-│   ├── app.py                  # Flask entry point – run this
-│   ├── config.py               # All thresholds & feature flags
-│   ├── database.py             # SQLite schema + CRUD helpers
+│   ├── app.py                  # Flask + Socket.IO entry point
+│   ├── config.py               # All thresholds, API keys, & feature flags
+│   ├── database.py             # SQLite/Supabase abstraction layer
 │   ├── modules/
-│   │   ├── packet_capture.py   # Scapy capture + simulation
+│   │   ├── ai_analyzer.py      # Google Gemini AI integration
+│   │   ├── packet_capture.py   # Scapy capture + WebSocket broadcasting
 │   │   ├── dos_detector.py     # DoS/DDoS detection engine
 │   │   ├── ids_parser.py       # Snort/Suricata parser + simulator
-│   │   ├── correlation.py      # Multi-source correlation engine
+│   │   ├── correlation.py      # AI-linked multi-source correlation engine
 │   │   └── geo_ip.py           # GeoIP lookup (ip-api.com)
-│   ├── routes/
-│   │   ├── alerts.py           # GET /api/alerts
-│   │   ├── traffic.py          # GET /api/traffic/*
-│   │   ├── ids.py              # GET /api/ids/*
-│   │   ├── threats.py          # GET/POST /api/threats/*
-│   │   └── settings.py         # GET/POST /api/settings, export
+│   ├── routes/                 # REST API Blueprints
 │   └── requirements.txt
 ├── frontend/
-│   ├── index.html              # Single-page dashboard
-│   ├── css/style.css           # Dark cyberpunk design system
+│   ├── index.html              # Modern glassmorphism dashboard
+│   ├── css/style.css           # Global design system
 │   └── js/
-│       ├── app.js              # Tab router, API helpers, toasts
-│       ├── overview.js         # KPI cards, live chart, health
-│       ├── alerts.js           # Real-time alert feed
-│       ├── traffic.js          # RPS, protocol, top-IPs charts
-│       ├── ids.js              # IDS events table
-│       ├── threats.js          # Correlated threat cards
-│       └── settings.js         # Settings panel logic
+│       ├── app.js              # Core controller & WebSocket handler
+│       ├── devices.js          # IP Security profiling logic
+│       ├── threats.js          # AI-enhanced threat visualization
+│       └── ...                 # Tab-specific modules
 └── README.md
 ```
 
@@ -57,7 +50,8 @@ jalgi-net/
 
 ### Prerequisites
 - Python 3.10+
-- pip
+- (Optional) Google Gemini API Key
+- (Optional) Supabase Project URL
 
 ### 1. Install dependencies
 
@@ -66,35 +60,36 @@ cd jalgi-net/backend
 pip install -r requirements.txt
 ```
 
-### 2. Start JalgiNet
+### 2. Configure Environment (Optional)
+
+Create a `.env` file or export variables:
+```bash
+export GEMINI_API_KEY="your_key"
+export USE_SUPABASE="True"
+export SUPABASE_DB_URL="postgresql://postgres:password@db.supabase.co:5432/postgres"
+```
+
+### 3. Start JalgiNet
 
 ```bash
 python app.py
 ```
 
-### 3. Open the dashboard
+### 4. Open the dashboard
 
-Navigate to **http://localhost:5000** in your browser.
-
-> The app starts in **Simulation Mode** by default — fully functional without needing Npcap, Snort, or admin privileges.
+Navigate to **http://localhost:3000** in your browser.
 
 ---
 
-## ⚙️ Configuration
+## ⚙️ Modernized Features
 
-All settings live in `backend/config.py`:
-
-| Setting | Default | Description |
-|---|---|---|
-| `SIMULATION_MODE` | `True` | Use synthetic traffic/IDS events |
-| `DOS_THRESHOLDS["Low"]` | 50 | Pkts/window for Low severity |
-| `DOS_THRESHOLDS["Medium"]` | 150 | Pkts/window for Medium severity |
-| `DOS_THRESHOLDS["High"]` | 300 | Pkts/window for High severity |
-| `DOS_THRESHOLDS["Critical"]` | 600 | Pkts/window for Critical severity |
-| `CORRELATION["window_seconds"]` | 300 | Correlation time window (5 min) |
-| `AUTO_BLOCK["enabled"]` | `False` | Simulate auto-blocking |
-
-Settings can also be updated **live** from the dashboard Settings tab.
+| Feature | Description |
+|---|---|
+| **AI Summaries** | Every correlated threat is analyzed by Gemini to explain the *why* and *how* of the attack. |
+| **WebSockets** | 0ms latency for alert arrival. The dashboard stays in sync without page refreshes. |
+| **Supabase Integration** | Seamlessly switch from SQLite to PostgreSQL by setting one flag in `config.py`. |
+| **Devices Tab** | View per-device security posture, total packets, and AI-generated risk profiles. |
+| **Glassmorphism UI** | A high-contrast, professional dark mode UI with backdrop-blur effects and Lucide iconography. |
 
 ---
 
@@ -104,33 +99,28 @@ Settings can also be updated **live** from the dashboard Settings tab.
 ┌─────────────────────────────────────────────────────────┐
 │                   JALGI-NET BACKEND                     │
 │                                                         │
-│  ┌──────────────┐   ┌──────────────┐                   │
-│  │Packet Capture│──▶│  DoS Detector│──▶ Alerts DB      │
-│  │  (Scapy/Sim) │   │ (Sliding Win)│                   │
-│  └──────────────┘   └──────────────┘                   │
-│                                                         │
-│  ┌──────────────┐                                       │
-│  │  IDS Parser  │──▶ IDS Events DB ──▶ Alerts DB       │
-│  │(Snort/Suric.)│                                       │
-│  └──────────────┘                                       │
-│           │                │                            │
-│           ▼                ▼                            │
-│  ┌─────────────────────────────┐                       │
-│  │     Correlation Engine      │──▶ Threats DB         │
-│  │  (Risk Score + Pattern Det) │                       │
-│  └─────────────────────────────┘                       │
-│                    │                                    │
-│           ┌────────▼────────┐                          │
-│           │  Flask REST API  │                          │
-│           │  (port 5000)    │                          │
-│           └────────┬────────┘                          │
+│  ┌──────────────┐   ┌────────────────┐   ┌───────────┐  │
+│  │Packet Capture│──▶│ AI Analyzer    │◀─▶│ Gemini API│  │
+│  │ (WebSocket)  │   │(Summarization) │   └───────────┘  │
+│  └──────────────┘   └────────────────┘                  │
+│           │                ▲                            │
+│           ▼                │                            │
+│  ┌─────────────────────────────┐         ┌───────────┐  │
+│  │     Correlation Engine      │────────▶│  Supabase │  │
+│  │  (Risk Score + AI Linking)  │         │ (Postgres)│  │
+│  └─────────────────────────────┘         └───────────┘  │
+│                    │                           ▲        │
+│           ┌────────▼────────┐                  │        │
+│           │ Flask + SocketIO│◀─────────────────┘        │
+│           │   (port 3000)   │                           │
+│           └────────┬────────┘                           │
 └────────────────────│────────────────────────────────────┘
-                     │ HTTP JSON (polled every 3s)
+                     │ WebSocket (Live Push)
                      ▼
 ┌─────────────────────────────────────────────────────────┐
 │              JALGI-NET DASHBOARD (Frontend)             │
 │                                                         │
-│  Overview │ Alerts │ Traffic │ IDS │ Threats │ Settings │
+│  Overview │ Alerts │ Traffic │ IDS │ Threats │ Devices  │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -140,98 +130,23 @@ Settings can also be updated **live** from the dashboard Settings tab.
 
 | Tab | Description |
 |---|---|
-| **Overview** | KPI cards, live traffic chart, top suspicious IPs, system health |
-| **Alerts Feed** | Real-time alert stream with filter/search + block action |
-| **Traffic Analysis** | RPS timeseries, protocol distribution, top-IPs bar chart |
-| **IDS Events** | Parsed Snort/Suricata events with attack-type filter |
-| **Correlated Threats** | Multi-stage attack records with risk scores (0–10) |
-| **Settings** | Live threshold config, module toggles, export, clear logs |
+| **Overview** | Real-time KPI cards, live traffic chart, and system health. |
+| **Alerts Feed** | Live-streamed security alerts with instant filtering. |
+| **Traffic Analysis** | RPS metrics and protocol distribution. |
+| **IDS Events** | Deep dive into Snort/Suricata signature matches. |
+| **Correlated Threats** | Multi-stage attacks with **AI Security Summaries**. |
+| **Devices** | Security profiles for every detected network asset. |
+| **Settings** | Configuration for AI, Storage, and detection thresholds. |
 
 ---
 
-## 🚨 Alert Schema
+## 🛡️ Modernized Detection Logic
 
-```json
-{
-  "type":        "DoS | IDS | Correlated",
-  "severity":    "Low | Medium | High | Critical",
-  "source_ip":   "185.220.101.42",
-  "description": "High packet rate detected: 340 pkts in 60s window",
-  "timestamp":   "2026-03-29T21:30:00Z"
-}
-```
-
----
-
-## 🛡️ Detection Logic
-
-### DoS Engine
-- **Volumetric flood**: per-IP packet count exceeds threshold in sliding window
-- **SYN flood**: SYN packet ratio > 85% of total TCP packets
-- **Distributed flood**: total spike with 5+ unique source IPs
-
-### Correlation Engine Risk Scoring
-
-```
-raw_score = Σ (type_weight × severity_multiplier) per event
-+ pattern_bonus (port_scan + brute_force + dos → +20 pts)
-final_score = min(raw_score / 8.0, 10.0)
-```
-
-| Score | Severity |
-|---|---|
-| 8.0 – 10.0 | Critical |
-| 6.0 – 7.9  | High |
-| 4.0 – 5.9  | Medium |
-| 0.0 – 3.9  | Low |
-
----
-
-## 🔌 API Endpoints
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/health` | System health & module status |
-| GET | `/api/alerts` | Paginated alerts (filter: severity, type) |
-| GET | `/api/alerts/summary` | Dashboard KPIs |
-| GET | `/api/traffic/stats` | RPS timeseries |
-| GET | `/api/traffic/top-ips` | Top IPs by packet count |
-| GET | `/api/traffic/protocols` | Protocol breakdown |
-| GET | `/api/ids/events` | IDS events (filter: attack_type) |
-| GET | `/api/ids/attack-types` | Distinct attack categories |
-| GET | `/api/threats/correlated` | Correlated threat records |
-| POST | `/api/threats/block` | Block an IP (simulation) |
-| POST | `/api/threats/unblock` | Unblock an IP |
-| GET | `/api/settings` | Current configuration |
-| POST | `/api/settings` | Update thresholds at runtime |
-| DELETE | `/api/logs/clear` | Wipe all stored data |
-| GET | `/api/export/json` | Full data export |
-
----
-
-## 💼 Business Value
-
-### Small Businesses
-JalgiNet provides an affordable, lightweight SOC monitoring solution. Without needing expensive enterprise software, small businesses can detect volumetric attacks, identify suspicious IPs, and block threats before they impact services.
-
-### Security Analysts
-Real-time alert streaming with severity classification enables analysts to triage threats immediately. The searchable, filterable alert feed and IDS event table accelerate incident investigation by providing structured, correlated data rather than raw logs.
-
-### SOC Teams
-The Correlation Engine is JalgiNet's most powerful feature for SOC workflows — it automatically links reconnaissance (port scans), lateral movement (brute force), and flooding (DoS) events from the same source IP into a single threat record with a risk score. This transforms hours of manual log correlation into seconds.
-
----
-
-## 🚀 Bonus Features
-
-| Feature | Status |
-|---|---|
-| Auto-block IPs | ✅ Simulation mode (toggle in Settings) |
-| GeoIP mapping | ✅ Live via ip-api.com free tier |
-| JSON export | ✅ Full data dump via Settings tab |
-| Browser notifications | ✅ Critical alert popups |
-| Real Snort/Suricata | ✅ Set `SIMULATION_MODE=False` + log path |
-| Live packet capture | ✅ Install Npcap + set `SIMULATION_MODE=False` |
+### AI-Enhanced Correlation
+The correlation engine now passes attack patterns to Gemini 1.5 Flash. The AI provides:
+1. **Executive Summary**: A human-readable description of the threat.
+2. **Security Impact**: What assets or data are at risk.
+3. **Recommended Actions**: Clear steps for remediation (e.g., "Rotate API keys", "Apply patch KB123").
 
 ---
 
@@ -239,14 +154,13 @@ The Correlation Engine is JalgiNet's most powerful feature for SOC workflows —
 
 | Layer | Technology |
 |---|---|
-| Backend | Python 3.10+, Flask, Flask-CORS |
-| Database | SQLite3 (built-in, zero config) |
-| Packet Capture | Scapy (simulation fallback built-in) |
-| Frontend | Vanilla HTML5, CSS3, JavaScript |
+| AI | Google Gemini 1.5 Flash |
+| Backend | Python 3.10+, Flask, Flask-SocketIO |
+| Database | PostgreSQL (Supabase) / SQLite3 |
+| Frontend | Vanilla JS, CSS3 (Glassmorphism), Lucide Icons |
+| Real-time | Socket.IO (WebSockets) |
 | Charts | Chart.js 4.x |
-| Fonts | Google Fonts — Inter + JetBrains Mono |
-| GeoIP | ip-api.com (free tier, no API key needed) |
 
 ---
 
-*Built as a production-style cybersecurity prototype demonstrating SOC monitoring architecture, real-time threat detection, and modern dashboard design.*
+*Modernized with ❤️ to provide a cutting-edge SOC monitoring experience.*

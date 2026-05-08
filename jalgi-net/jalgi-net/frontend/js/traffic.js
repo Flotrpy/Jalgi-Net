@@ -1,5 +1,5 @@
 /**
- * JalgiNet – Traffic Analysis Tab (traffic.js)
+ * JalgiNet - Traffic Analysis Tab (traffic.js)
  * RPS line chart, protocol donut, top-IPs bar chart.
  */
 

@@ -1,5 +1,5 @@
 /**
- * JalgiNet – Alerts Feed Tab (alerts.js)
+ * JalgiNet - Alerts Feed Tab (alerts.js)
  * Real-time alert stream with severity/type filters and search.
  */
 
@@ -18,11 +18,11 @@ function buildAlertHTML(a) {
         </div>
         <div class="alert-desc">${a.description}</div>
         <div class="alert-meta">
-          <span class="alert-ip">⬡ ${a.source_ip}</span>
+          <span class="alert-ip">${a.source_ip}</span>
           <span>${formatTimestamp(a.timestamp)}</span>
         </div>
       </div>
-      <button class="alert-action-btn" onclick="blockAlertIp('${a.source_ip}')">⛔ Block</button>
+      <button class="alert-action-btn" onclick="blockAlertIp('${a.source_ip}')">Block</button>
     </div>`;
 }
 
@@ -80,7 +80,7 @@ async function refreshAlerts() {
     : '<p style="color:var(--text-muted);padding:20px;text-align:center;">No alerts match the current filter.</p>';
 }
 
-// ── Filter bindings ───────────────────────────────────────────────────────────
+//  Filter bindings
 document.addEventListener('DOMContentLoaded', () => {
   // Severity filter
   document.querySelectorAll('.filter-btn:not(.type-btn)').forEach(btn => {

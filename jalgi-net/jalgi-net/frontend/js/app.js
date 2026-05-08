@@ -1,12 +1,12 @@
 /**
- * JalgiNet – Core App Controller (app.js)
+ * JalgiNet - Core App Controller (app.js)
  * Tab routing, global state, API helpers, clock, and toasts.
  */
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = window.location.origin;
 const REFRESH_INTERVAL = 3000; // ms
 
-// ── Global state ─────────────────────────────────────────────────────────────
+//  Global state
 window.JalgiNet = {
   currentTab: 'overview',
   stats: {},
@@ -15,7 +15,7 @@ window.JalgiNet = {
   socket: null,
 };
 
-// ── API helper ────────────────────────────────────────────────────────────────
+//  API helper
 async function apiFetch(path, options = {}) {
   try {
     const res = await fetch(API_BASE + path, options);
@@ -28,7 +28,7 @@ async function apiFetch(path, options = {}) {
 }
 window.apiFetch = apiFetch;
 
-// ── Tab routing ───────────────────────────────────────────────────────────────
+//  Tab routing
 const TAB_TITLES = {
   overview: ['Overview',            'Real-time network threat monitoring'],
   alerts:   ['Alerts Feed',         'Live stream of detected security events'],
@@ -58,7 +58,7 @@ document.querySelectorAll('.nav-item').forEach(el => {
   el.addEventListener('click', () => switchTab(el.dataset.tab));
 });
 
-// ── Live clock ────────────────────────────────────────────────────────────────
+//  Live clock
 function updateClock() {
   const now = new Date();
   document.getElementById('clockDisplay').textContent =
@@ -67,7 +67,7 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// ── System health check ───────────────────────────────────────────────────────
+//  System health check
 async function checkHealth() {
   const data = await apiFetch('/api/health');
   const dot   = document.getElementById('systemStatusDot');
@@ -111,11 +111,11 @@ function setHealthBadge(elId, active) {
   }
 }
 
-// ── Global KPI bar (topbar) ───────────────────────────────────────────────────
+//  Global KPI bar (topbar)
 function updateUIFromStats(s) {
   if (!s) return;
   document.getElementById('topbarRPS').textContent =
-    s.current_rps != null ? s.current_rps.toFixed(1) : '—';
+    s.current_rps != null ? s.current_rps.toFixed(1) : '-';
   document.getElementById('topbarCritical').textContent =
     s.critical_alerts ?? 0;
 
@@ -141,7 +141,7 @@ async function refreshTopbar() {
   }
 }
 
-// ── Toast notifications ───────────────────────────────────────────────────────
+//  Toast notifications
 function showToast(title, message, severity = 'info', duration = 5000) {
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
@@ -151,14 +151,14 @@ function showToast(title, message, severity = 'info', duration = 5000) {
       <div class="toast-title">${title}</div>
       <div class="toast-msg">${message}</div>
     </div>
-    <button class="toast-close" onclick="this.closest('.toast').remove()">✕</button>
+    <button class="toast-close" onclick="this.closest('.toast').remove()">X</button>
   `;
   container.appendChild(toast);
   setTimeout(() => toast.remove(), duration);
 
   // Browser notification for Critical
   if (severity === 'Critical' && Notification.permission === 'granted') {
-    new Notification(`JalgiNet – ${title}`, { body: message, icon: '/favicon.ico' });
+    new Notification(`JalgiNet - ${title}`, { body: message, icon: '/favicon.ico' });
   }
 }
 window.showToast = showToast;
@@ -168,7 +168,7 @@ if ('Notification' in window && Notification.permission === 'default') {
   Notification.requestPermission();
 }
 
-// ── Severity color helpers ────────────────────────────────────────────────────
+//  Severity color helpers
 const SEVERITY_COLOR = {
   Critical: '#ff3366',
   High:     '#ff6b35',
@@ -178,7 +178,7 @@ const SEVERITY_COLOR = {
 window.SEVERITY_COLOR = SEVERITY_COLOR;
 
 function formatTimestamp(ts) {
-  if (!ts) return '—';
+  if (!ts) return '-';
   const d = new Date(ts);
   return d.toLocaleTimeString('en-US', { hour12: false }) + ' ' +
          d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
@@ -199,7 +199,7 @@ function attackPillClass(type) {
 }
 window.attackPillClass = attackPillClass;
 
-// ── WebSocket setup ──────────────────────────────────────────────────────────
+//  WebSocket setup
 function initWebSockets() {
   const socket = io(API_BASE);
   window.JalgiNet.socket = socket;
@@ -227,7 +227,7 @@ function initWebSockets() {
   });
 }
 
-// ── Boot sequence ─────────────────────────────────────────────────────────────
+//  Boot sequence
 async function boot() {
   await checkHealth();
   await refreshTopbar();

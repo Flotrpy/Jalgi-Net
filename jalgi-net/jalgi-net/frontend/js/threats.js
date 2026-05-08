@@ -1,13 +1,13 @@
 /**
- * JalgiNet – Correlated Threats Tab (threats.js)
+ * JalgiNet - Correlated Threats Tab (threats.js)
  * Risk-scored multi-stage attack cards with block action.
  */
 
 function buildChainHTML(chain) {
-  if (!chain || !chain.length) return '<span style="color:var(--text-muted)">—</span>';
+  if (!chain || !chain.length) return '<span style="color:var(--text-muted)">-</span>';
   return chain.map((item, i) =>
     `<span class="chain-item">${item.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>` +
-    (i < chain.length - 1 ? '<span class="chain-arrow">→</span>' : '')
+    (i < chain.length - 1 ? '<span class="chain-arrow">></span>' : '')
   ).join('');
 }
 
@@ -37,7 +37,7 @@ function buildThreatCard(t) {
     <div class="threat-card ${t.severity}">
       <div class="threat-card-header">
         <div>
-          <div class="threat-ip">⬡ ${t.source_ip}</div>
+          <div class="threat-ip">${t.source_ip}</div>
           <span class="severity-badge ${t.severity}" style="margin-top:6px;display:inline-block">${t.severity}</span>
         </div>
         <div class="risk-score-badge ${t.severity}">
@@ -54,7 +54,7 @@ function buildThreatCard(t) {
           <span><b>Events</b>${(t.event_ids || []).length} linked</span>
         </div>
         ${aiSection}
-        <button class="threat-block-btn" onclick="blockThreatIp('${t.source_ip}')">⛔ Block ${t.source_ip}</button>
+        <button class="threat-block-btn" onclick="blockThreatIp('${t.source_ip}')">Block ${t.source_ip}</button>
       </div>
     </div>`;
 }
@@ -104,8 +104,8 @@ async function refreshThreats() {
   if (!threats.length) {
     listEl.innerHTML = `
       <div class="card" style="padding:30px;text-align:center;color:var(--text-muted)">
-        <div style="font-size:2rem;margin-bottom:8px">✅</div>
-        <div>No correlated threats detected yet. Monitoring in progress…</div>
+        <div style="font-size:2rem;margin-bottom:8px"><i data-lucide="check-circle"></i></div>
+        <div>No correlated threats detected yet. Monitoring in progress...</div>
       </div>`;
     return;
   }

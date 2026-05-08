@@ -1,5 +1,5 @@
 /**
- * JalgiNet – IDS Events Tab (ids.js)
+ * JalgiNet - IDS Events Tab (ids.js)
  * Filterable table of parsed Snort/Suricata events.
  */
 
@@ -23,9 +23,9 @@ function buildIdsRow(e, i) {
     <td>${formatTimestamp(e.timestamp)}</td>
     <td><span class="attack-pill ${pillClass}">${e.attack_type}</span></td>
     <td class="ip-cell">${e.source_ip}</td>
-    <td class="ip-cell">${e.dest_ip || '—'}:${e.dest_port || '—'}</td>
-    <td class="rule-cell">${e.rule_id || '—'}</td>
-    <td class="msg-cell" title="${e.rule_msg}">${e.rule_msg || '—'}</td>
+    <td class="ip-cell">${e.dest_ip || '-'}:${e.dest_port || '-'}</td>
+    <td class="rule-cell">${e.rule_id || '-'}</td>
+    <td class="msg-cell" title="${e.rule_msg}">${e.rule_msg || '-'}</td>
     <td><span class="severity-badge ${e.severity}">${e.severity}</span></td>
   </tr>`;
 }

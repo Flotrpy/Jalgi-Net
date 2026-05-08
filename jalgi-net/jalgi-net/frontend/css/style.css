@@ -1,9 +1,9 @@
-/* ═══════════════════════════════════════════════════════════════
-   JalgiNet – Global Design System
+/*
+   JalgiNet - Global Design System
    Dark cyberpunk theme for SOC monitoring dashboard
-   ═══════════════════════════════════════════════════════════════ */
+    */
 
-/* ── Design tokens ──────────────────────────────────────────── */
+/*  Design tokens  */
 :root {
   --bg-base:      #050810;
   --bg-surface:   rgba(14, 21, 36, 0.8);
@@ -44,7 +44,7 @@
   --transition: 0.2s ease;
 }
 
-/* ── Reset ──────────────────────────────────────────────────── */
+/*  Reset  */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 15px; scroll-behavior: smooth; }
 body {
@@ -56,15 +56,15 @@ body {
   overflow-x: hidden;
 }
 
-/* ── Scrollbar ──────────────────────────────────────────────── */
+/*  Scrollbar  */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg-base); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--cyan-dim); }
 
-/* ══════════════════════════════════════════════════════════════
+/*
    SIDEBAR
-   ══════════════════════════════════════════════════════════════ */
+    */
 .sidebar {
   position: fixed;
   top: 0; left: 0;
@@ -186,9 +186,9 @@ body {
   color: var(--text-muted);
 }
 
-/* ══════════════════════════════════════════════════════════════
+/*
    MAIN CONTENT
-   ══════════════════════════════════════════════════════════════ */
+    */
 .main-content {
   margin-left: var(--sidebar-w);
   flex: 1;
@@ -249,9 +249,9 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ══════════════════════════════════════════════════════════════
+/*
    KPI CARDS
-   ══════════════════════════════════════════════════════════════ */
+    */
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
@@ -305,9 +305,9 @@ body {
 .kpi-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; display: block; }
 .kpi-trend { font-size: 0.85rem; color: var(--cyan); font-family: var(--font-mono); }
 
-/* ══════════════════════════════════════════════════════════════
+/*
    CARDS
-   ══════════════════════════════════════════════════════════════ */
+    */
 .card {
   background: var(--bg-card);
   backdrop-filter: var(--glass);
@@ -357,9 +357,9 @@ body {
 .chart-wrap canvas { max-height: 280px; }
 .chart-sm canvas { max-height: 200px; }
 
-/* ══════════════════════════════════════════════════════════════
+/*
    TOP IPs LIST (sidebar of overview)
-   ══════════════════════════════════════════════════════════════ */
+    */
 .ip-list { list-style: none; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
 .ip-item {
   display: flex;
@@ -380,9 +380,9 @@ body {
 .ip-bar-wrap { position: relative; width: 60px; height: 4px; background: var(--bg-base); border-radius: 2px; }
 .ip-bar    { position: absolute; left: 0; top: 0; height: 100%; background: var(--cyan); border-radius: 2px; }
 
-/* ══════════════════════════════════════════════════════════════
+/*
    HEALTH PANEL
-   ══════════════════════════════════════════════════════════════ */
+    */
 .health-panel { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .health-row {
   display: flex;
@@ -402,9 +402,9 @@ body {
 .health-badge.yellow { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(255,193,7,0.3); }
 .health-badge.red    { background: var(--red-dim);    color: var(--red);    border: 1px solid rgba(255,51,102,0.3); }
 
-/* ══════════════════════════════════════════════════════════════
+/*
    MINI ALERT LIST
-   ══════════════════════════════════════════════════════════════ */
+    */
 .mini-alert-list { list-style: none; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
 .mini-alert-item {
   padding: 8px 10px;
@@ -417,9 +417,9 @@ body {
 .mini-alert-desc { color: var(--text-secondary); margin-top: 2px; }
 .mini-alert-time { color: var(--text-muted); font-size: 0.7rem; font-family: var(--font-mono); }
 
-/* ══════════════════════════════════════════════════════════════
+/*
    ALERTS FEED
-   ══════════════════════════════════════════════════════════════ */
+    */
 .toolbar {
   display: flex;
   align-items: center;
@@ -485,7 +485,7 @@ body {
 .alert-item.Medium   { border-left: 3px solid var(--yellow); background: linear-gradient(90deg, var(--yellow-dim), var(--bg-card-alt)); }
 .alert-item.Low      { border-left: 3px solid var(--green);  background: linear-gradient(90deg, var(--green-dim), var(--bg-card-alt)); }
 
-/* Critical alert – animated glow border */
+/* Critical alert - animated glow border */
 .alert-item.Critical {
   box-shadow: 0 0 0 1px rgba(255,51,102,0.3);
   animation: slideIn 0.3s ease, criticalGlow 2s ease-in-out infinite;
@@ -545,9 +545,9 @@ body {
 }
 .alert-action-btn:hover { background: var(--red); color: #fff; }
 
-/* ══════════════════════════════════════════════════════════════
+/*
    DATA TABLE (IDS Events)
-   ══════════════════════════════════════════════════════════════ */
+    */
 .table-wrap { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
 .data-table th {
@@ -591,9 +591,9 @@ body {
 .attack-pill.dns         { background: rgba(0,255,136,0.12);   color: var(--green); }
 .attack-pill.default     { background: var(--bg-card);          color: var(--text-muted); }
 
-/* ══════════════════════════════════════════════════════════════
+/*
    CORRELATED THREATS
-   ══════════════════════════════════════════════════════════════ */
+    */
 .threat-kpis {
   padding: 16px;
   display: flex;
@@ -697,9 +697,9 @@ body {
 }
 .threat-block-btn:hover { background: var(--red); color: #fff; }
 
-/* ══════════════════════════════════════════════════════════════
+/*
    SETTINGS
-   ══════════════════════════════════════════════════════════════ */
+    */
 .settings-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -819,9 +819,9 @@ input:checked + .toggle-slider::before { transform: translateX(20px); background
 .muted { color: var(--text-muted); font-size: 0.78rem; }
 .small  { font-size: 0.72rem; }
 
-/* ══════════════════════════════════════════════════════════════
+/*
    TOAST NOTIFICATIONS
-   ══════════════════════════════════════════════════════════════ */
+    */
 .toast-container {
   position: fixed;
   bottom: 24px;
@@ -856,9 +856,9 @@ input:checked + .toggle-slider::before { transform: translateX(20px); background
 .toast-msg      { font-size: 0.78rem; color: var(--text-secondary); }
 .toast-close    { margin-left: auto; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; padding: 0; line-height: 1; }
 
-/* ══════════════════════════════════════════════════════════════
+/*
    RESPONSIVE
-   ══════════════════════════════════════════════════════════════ */
+    */
 @media (max-width: 1100px) {
   .dashboard-row { grid-template-columns: 1fr 1fr; }
   .dashboard-row .wide { grid-column: span 2; }

@@ -49,11 +49,15 @@ class DBConnection:
         return self.conn.cursor()
 
     def execute(self, query: str, params: tuple = ()):
-        # Adapt placeholder from ? (SQLite) to %s (PostgreSQL) if needed
+        # Adapt syntax for specific DB engines
         if self.use_supabase:
+            # Replace SQLite ? placeholders with PostgreSQL %s
             query = query.replace("?", "%s")
-            # PostgreSQL doesn't use AUTOINCREMENT but SERIAL/IDENTITY
+            # Ensure serial type is used for PRIMARY KEY if hardcoded (though we use SERIAL in init_db)
             query = query.replace("INTEGER PRIMARY KEY AUTOINCREMENT", "SERIAL PRIMARY KEY")
+        else:
+            # Ensure PostgreSQL SERIAL is mapped back to SQLite AUTOINCREMENT if shared SQL is used
+            query = query.replace("SERIAL PRIMARY KEY", "INTEGER PRIMARY KEY AUTOINCREMENT")
 
         cursor = self.cursor()
         cursor.execute(query, params)
@@ -77,7 +81,7 @@ def init_db():
     """Create all tables if they don't already exist."""
     db = get_connection()
 
-    # Define table schemas (standard SQL with minor adjustments handled in db.execute)
+    # Define table schemas (standard SQL with SERIAL PRIMARY KEY, handled by DBConnection.execute for SQLite)
     tables = [
         # Alerts
         """CREATE TABLE IF NOT EXISTS alerts (
@@ -167,11 +171,20 @@ def insert_alert(alert_type: str, severity: str, source_ip: str,
     conn = get_connection()
     ts = datetime.utcnow().isoformat() + "Z"
     extra_json = json.dumps(extra or {})
-    cursor = conn.execute(
-        "INSERT INTO alerts (type, severity, source_ip, description, timestamp, extra) "
-        "VALUES (?, ?, ?, ?, ?, ?)",
-        (alert_type, severity, source_ip, description, ts, extra_json)
-    )
+
+    sql = "INSERT INTO alerts (type, severity, source_ip, description, timestamp, extra) VALUES (?, ?, ?, ?, ?, ?)"
+    if config.USE_SUPABASE:
+        sql += " RETURNING id"
+
+    cursor = conn.execute(sql, (alert_type, severity, source_ip, description, ts, extra_json))
+
+    last_id = 0
+    if config.USE_SUPABASE:
+        res = cursor.fetchone()
+        last_id = res['id'] if res else 0
+    else:
+        last_id = cursor.lastrowid
+
     conn.commit()
 
     # Broadcast new alert via WebSocket
@@ -187,9 +200,7 @@ def insert_alert(alert_type: str, severity: str, source_ip: str,
     except ImportError:
         pass
 
-    if config.USE_SUPABASE:
-        return 0 # PostgreSQL SERIAL handles this differently if needed
-    return cursor.lastrowid
+    return last_id
 
 def get_alerts(limit: int = 100, offset: int = 0,
                severity: str = None, alert_type: str = None) -> list:
@@ -230,13 +241,23 @@ def insert_traffic_log(source_ip: str, dest_ip: str, src_port: int,
                        flags: str = "") -> int:
     conn = get_connection()
     ts = datetime.utcnow().isoformat() + "Z"
-    cursor = conn.execute(
-        "INSERT INTO traffic_logs (source_ip, dest_ip, source_port, dest_port, "
-        "protocol, packet_size, timestamp, flags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (source_ip, dest_ip, src_port, dst_port, protocol, pkt_size, ts, flags)
-    )
+
+    sql = ("INSERT INTO traffic_logs (source_ip, dest_ip, source_port, dest_port, "
+           "protocol, packet_size, timestamp, flags) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+    if config.USE_SUPABASE:
+        sql += " RETURNING id"
+
+    cursor = conn.execute(sql, (source_ip, dest_ip, src_port, dst_port, protocol, pkt_size, ts, flags))
+
+    last_id = 0
+    if config.USE_SUPABASE:
+        res = cursor.fetchone()
+        last_id = res['id'] if res else 0
+    else:
+        last_id = cursor.lastrowid
+
     conn.commit()
-    return 0
+    return last_id
 
 def insert_traffic_stat(rps: float, total_pkts: int, unique_ips: int):
     conn = get_connection()
@@ -272,14 +293,27 @@ def insert_ids_event(attack_type: str, source_ip: str, dest_ip: str,
                      severity: str, raw_log: str = "") -> int:
     conn = get_connection()
     ts = datetime.utcnow().isoformat() + "Z"
-    conn.execute(
-        "INSERT INTO ids_events (attack_type, source_ip, dest_ip, dest_port, "
-        "rule_id, rule_msg, severity, timestamp, raw_log) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+
+    sql = ("INSERT INTO ids_events (attack_type, source_ip, dest_ip, dest_port, "
+           "rule_id, rule_msg, severity, timestamp, raw_log) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    if config.USE_SUPABASE:
+        sql += " RETURNING id"
+
+    cursor = conn.execute(
+        sql,
         (attack_type, source_ip, dest_ip, dest_port,
          rule_id, rule_msg, severity, ts, raw_log)
     )
+
+    last_id = 0
+    if config.USE_SUPABASE:
+        res = cursor.fetchone()
+        last_id = res['id'] if res else 0
+    else:
+        last_id = cursor.lastrowid
+
     conn.commit()
-    return 0
+    return last_id
 
 def get_ids_events(limit: int = 100, offset: int = 0,
                    attack_type: str = None) -> list:
@@ -323,16 +357,25 @@ def upsert_correlated_threat(source_ip: str, risk_score: float,
         )
         threat_id = row["id"]
     else:
-        conn.execute(
-            "INSERT INTO correlated_threats (source_ip, risk_score, severity, "
-            "attack_chain, description, first_seen, last_seen, event_ids, "
-            "ai_summary, security_impact, recommended_actions) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        sql = ("INSERT INTO correlated_threats (source_ip, risk_score, severity, "
+               "attack_chain, description, first_seen, last_seen, event_ids, "
+               "ai_summary, security_impact, recommended_actions) "
+               "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        if config.USE_SUPABASE:
+            sql += " RETURNING id"
+
+        cursor = conn.execute(
+            sql,
             (source_ip, risk_score, severity, json.dumps(attack_chain),
              description, ts_now, ts_now, json.dumps(event_ids),
              ai_summary, ai_impact, ai_actions)
         )
-        threat_id = 0 # Postgres SERIAL handles ID
+
+        if config.USE_SUPABASE:
+            res = cursor.fetchone()
+            threat_id = res['id'] if res else 0
+        else:
+            threat_id = cursor.lastrowid
 
     conn.commit()
 

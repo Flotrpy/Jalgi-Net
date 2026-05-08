@@ -1,5 +1,5 @@
 /**
- * JalgiNet – Overview Tab (overview.js)
+ * JalgiNet - Overview Tab (overview.js)
  * KPI counters, live traffic area chart, top-IPs list,
  * severity donut chart, and recent critical alerts list.
  */
@@ -10,7 +10,7 @@ const MAX_TRAFFIC_POINTS = 40;
 const trafficLabels      = [];
 const trafficData        = [];
 
-// ── Animated counter helper ───────────────────────────────────────────────────
+//  Animated counter helper
 function animateNum(elId, target) {
   const el = document.getElementById(elId);
   if (!el) return;
@@ -28,7 +28,7 @@ function animateNum(elId, target) {
   }, 30);
 }
 
-// ── Build / update traffic chart ──────────────────────────────────────────────
+//  Build / update traffic chart
 function initTrafficChart() {
   const ctx = document.getElementById('overviewTrafficChart');
   if (!ctx) return;
@@ -95,7 +95,7 @@ function updateTrafficChart(stats) {
   overviewTrafficChart.update('none');
 }
 
-// ── Severity donut chart ──────────────────────────────────────────────────────
+//  Severity donut chart
 function initSeverityDonut() {
   const ctx = document.getElementById('severityDonutChart');
   if (!ctx) return;
@@ -144,24 +144,24 @@ function updateSeverityDonut(counts) {
 }
 
 
-// ── Recent critical alerts ────────────────────────────────────────────────────
+//  Recent critical alerts
 function renderRecentCritical(alerts) {
   const ul = document.getElementById('recentCriticalList');
   if (!ul) return;
   const critical = alerts.filter(a => a.severity === 'Critical').slice(0, 5);
   if (!critical.length) {
-    ul.innerHTML = '<li class="mini-alert-item" style="border-left-color:#00ff88;background:rgba(0,255,136,0.06)"><div class="mini-alert-desc" style="color:#00ff88">✓ No critical alerts</div></li>';
+    ul.innerHTML = '<li class="mini-alert-item" style="border-left-color:#00ff88;background:rgba(0,255,136,0.06)"><div class="mini-alert-desc" style="color:#00ff88">No critical alerts</div></li>';
     return;
   }
   ul.innerHTML = critical.map(a => `
     <li class="mini-alert-item">
       <div class="mini-alert-ip">${a.source_ip}</div>
-      <div class="mini-alert-desc">${a.description.substring(0, 72)}…</div>
+      <div class="mini-alert-desc">${a.description.substring(0, 72)}...</div>
       <div class="mini-alert-time">${formatTimestamp(a.timestamp)}</div>
     </li>`).join('');
 }
 
-// ── Main refresh ──────────────────────────────────────────────────────────────
+//  Main refresh
 async function refreshOverview() {
   const [summary, trafficStats, alerts] = await Promise.all([
     apiFetch('/api/alerts/summary'),
@@ -183,7 +183,7 @@ async function refreshOverview() {
     // Notify on new Critical
     if (s.critical_alerts > 0 && !window.JalgiNet.notifiedIds.has('crit_overview')) {
       window.JalgiNet.notifiedIds.add('crit_overview');
-      showToast('⚠️ Critical Alert', `${s.critical_alerts} critical threat(s) detected!`, 'Critical');
+      showToast('Critical Alert', `${s.critical_alerts} critical threat(s) detected!`, 'Critical');
       setTimeout(() => window.JalgiNet.notifiedIds.delete('crit_overview'), 30000);
     }
   }
@@ -198,7 +198,7 @@ async function refreshOverview() {
   }
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+//  Init
 document.addEventListener('DOMContentLoaded', () => {
   initTrafficChart();
   initSeverityDonut();

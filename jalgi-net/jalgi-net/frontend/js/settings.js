@@ -1,9 +1,9 @@
 /**
- * JalgiNet – Settings Tab (settings.js)
+ * JalgiNet - Settings Tab (settings.js)
  * Threshold sliders, module toggles, blocked IPs, log management, export.
  */
 
-// ── Load current settings from API ───────────────────────────────────────────
+//  Load current settings from API
 async function loadSettings() {
   const data = await apiFetch('/api/settings');
   if (!data || !data.settings) return;
@@ -53,7 +53,7 @@ function setCheck(id, v) { const el = document.getElementById(id); if (el) el.ch
 function getVal(id) { const el = document.getElementById(id); return el ? parseFloat(el.value) : null; }
 function getCheck(id) { const el = document.getElementById(id); return el ? el.checked : false; }
 
-// ── Save settings ─────────────────────────────────────────────────────────────
+//  Save settings
 async function saveSettings() {
   const payload = {
     dos_thresholds: {
@@ -84,14 +84,14 @@ async function saveSettings() {
   const msgEl = document.getElementById('settingsSaveMsg');
   if (res && res.status === 'ok') {
     showToast('Settings Saved', 'All thresholds and module toggles updated.', 'success');
-    if (msgEl) { msgEl.textContent = '✓ Saved successfully'; msgEl.style.color = 'var(--green)'; }
+    if (msgEl) { msgEl.textContent = 'Saved successfully'; msgEl.style.color = 'var(--green)'; }
   } else {
-    if (msgEl) { msgEl.textContent = '✗ Save failed – check API'; msgEl.style.color = 'var(--red)'; }
+    if (msgEl) { msgEl.textContent = 'Save failed - check API'; msgEl.style.color = 'var(--red)'; }
   }
   setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 4000);
 }
 
-// ── Block / Unblock IPs ───────────────────────────────────────────────────────
+//  Block / Unblock IPs
 async function loadBlockedIps() {
   const data = await apiFetch('/api/threats/blocked-ips');
   const container = document.getElementById('blockedIpsList');
@@ -103,7 +103,7 @@ async function loadBlockedIps() {
   }
   container.innerHTML = ips.map(entry => `
     <div class="blocked-ip-row">
-      <span class="blocked-ip-addr">⛔ ${entry.ip}</span>
+      <span class="blocked-ip-addr">${entry.ip}</span>
       <span style="color:var(--text-muted);font-size:0.7rem">${entry.reason || ''}</span>
       <button class="unblock-btn" onclick="unblockIp('${entry.ip}')">Unblock</button>
     </div>`).join('');
@@ -120,16 +120,16 @@ async function unblockIp(ip) {
 }
 window.unblockIp = unblockIp;
 
-// ── Clear logs ────────────────────────────────────────────────────────────────
+//  Clear logs
 async function clearLogs() {
-  if (!confirm('⚠️ This will permanently delete ALL alerts, traffic logs, IDS events and correlated threats. Continue?')) return;
+  if (!confirm('This will permanently delete ALL alerts, traffic logs, IDS events and correlated threats. Continue?')) return;
   const res = await apiFetch('/api/logs/clear', { method: 'DELETE' });
   if (res && res.status === 'ok') {
     showToast('Logs Cleared', 'All data has been wiped from the database.', 'High');
   }
 }
 
-// ── Export JSON ───────────────────────────────────────────────────────────────
+//  Export JSON
 async function exportJson() {
   const data = await apiFetch('/api/export/json');
   if (!data) return;
@@ -143,7 +143,7 @@ async function exportJson() {
   showToast('Export Ready', 'JSON report downloaded successfully.', 'success');
 }
 
-// ── Boot ──────────────────────────────────────────────────────────────────────
+//  Boot
 document.addEventListener('DOMContentLoaded', () => {
   loadSettings();
   loadBlockedIps();

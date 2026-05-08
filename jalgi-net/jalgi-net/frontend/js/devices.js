@@ -1,5 +1,5 @@
 /**
- * JalgiNet – Devices Tab (devices.js)
+ * JalgiNet - Devices Tab (devices.js)
  * Provides a detailed security profile for each unique IP address.
  */
 

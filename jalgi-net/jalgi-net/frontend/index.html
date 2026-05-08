@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="JalgiNet – Real-time SOC monitoring platform combining DoS detection, IDS integration and threat correlation for enterprise network security." />
+  <meta name="description" content="JalgiNet - Real-time SOC monitoring platform combining DoS detection, IDS integration and threat correlation for enterprise network security." />
   <title>JalgiNet | SOC Security Monitor</title>
 
   <!-- Google Fonts -->
@@ -24,7 +24,7 @@
 </head>
 <body>
 
-  <!-- ═══════════════ SIDEBAR NAV ═══════════════ -->
+  <!--  SIDEBAR NAV  -->
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-brand">
       <div class="brand-icon">
@@ -82,7 +82,7 @@
     </div>
   </nav>
 
-  <!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+  <!--  MAIN CONTENT  -->
   <main class="main-content" id="mainContent">
 
     <!-- Header bar -->
@@ -94,7 +94,7 @@
       <div class="topbar-right">
         <div class="kpi-mini">
           <span class="kpi-mini-label">RPS</span>
-          <span class="kpi-mini-val" id="topbarRPS">—</span>
+          <span class="kpi-mini-val" id="topbarRPS">-</span>
         </div>
         <div class="kpi-mini danger">
           <span class="kpi-mini-label">CRITICAL</span>
@@ -110,7 +110,7 @@
     <!-- Tab panels -->
     <div class="tab-panels">
 
-      <!-- ── OVERVIEW ─────────────────────────────── -->
+      <!--  OVERVIEW  -->
       <section class="tab-panel active" id="panel-overview">
         <!-- KPI cards row -->
         <div class="kpi-grid">
@@ -227,10 +227,10 @@
         </div>
       </section>
 
-      <!-- ── ALERTS FEED ───────────────────────────── -->
+      <!--  ALERTS FEED  -->
       <section class="tab-panel" id="panel-alerts">
         <div class="toolbar">
-          <input class="search-input" id="alertSearch" placeholder="🔍  Search alerts…" />
+          <input class="search-input" id="alertSearch" placeholder="Search alerts..." />
           <div class="filter-group">
             <button class="filter-btn active" data-filter="">All</button>
             <button class="filter-btn" data-filter="Critical">Critical</button>
@@ -255,7 +255,7 @@
         </div>
       </section>
 
-      <!-- ── TRAFFIC ANALYSIS ──────────────────────── -->
+      <!--  TRAFFIC ANALYSIS  -->
       <section class="tab-panel" id="panel-traffic">
         <div class="dashboard-row">
           <div class="card chart-card wide">
@@ -284,10 +284,10 @@
         </div>
       </section>
 
-      <!-- ── IDS EVENTS ────────────────────────────── -->
+      <!--  IDS EVENTS  -->
       <section class="tab-panel" id="panel-ids">
         <div class="toolbar">
-          <input class="search-input" id="idsSearch" placeholder="🔍  Search IDS events…" />
+          <input class="search-input" id="idsSearch" placeholder="Search IDS events..." />
           <div class="filter-group" id="attackTypeFilters">
             <button class="filter-btn active" data-attack="">All Types</button>
           </div>
@@ -317,7 +317,7 @@
         </div>
       </section>
 
-      <!-- ── CORRELATED THREATS ────────────────────── -->
+      <!--  CORRELATED THREATS  -->
       <section class="tab-panel" id="panel-threats">
         <div class="dashboard-row">
           <div class="card">
@@ -328,7 +328,7 @@
         <div class="threat-list" id="threatList"></div>
       </section>
 
-      <!-- ── DEVICES ────────────────────────────────── -->
+      <!--  DEVICES  -->
       <section class="tab-panel" id="panel-devices">
         <div class="card full-card">
           <div class="card-header">
@@ -341,12 +341,12 @@
         </div>
       </section>
 
-      <!-- ── SETTINGS ──────────────────────────────── -->
+      <!--  SETTINGS  -->
       <section class="tab-panel" id="panel-settings">
         <div class="settings-grid">
 
           <div class="card settings-card">
-            <div class="card-header"><h2>🎚️ DoS Detection Thresholds</h2></div>
+            <div class="card-header"><h2> DoS Detection Thresholds</h2></div>
             <div class="settings-body">
               <label class="setting-row">
                 <span>Detection Window (seconds)</span>
@@ -376,7 +376,7 @@
           </div>
 
           <div class="card settings-card">
-            <div class="card-header"><h2>🔧 Module Toggles</h2></div>
+            <div class="card-header"><h2> Module Toggles</h2></div>
             <div class="settings-body">
               <label class="toggle-row">
                 <span style="flex: 1">Simulation Mode</span>
@@ -427,7 +427,7 @@
           </div>
 
           <div class="card settings-card">
-            <div class="card-header"><h2>⚙️ Correlation Settings</h2></div>
+            <div class="card-header"><h2> Correlation Settings</h2></div>
             <div class="settings-body">
               <label class="setting-row">
                 <span>Correlation Window (seconds)</span>
@@ -437,31 +437,31 @@
           </div>
 
           <div class="card settings-card">
-            <div class="card-header"><h2>🚫 Blocked IPs</h2></div>
+            <div class="card-header"><h2> Blocked IPs</h2></div>
             <div class="settings-body">
               <div class="blocked-ips-list" id="blockedIpsList">
                 <p class="muted">No IPs currently blocked.</p>
               </div>
               <div class="block-form">
-                <input class="setting-input" id="blockIpInput" placeholder="Enter IP to block…" />
+                <input class="setting-input" id="blockIpInput" placeholder="Enter IP to block..." />
                 <button class="btn btn-danger" id="blockIpBtn">Block IP</button>
               </div>
             </div>
           </div>
 
           <div class="card settings-card actions-card">
-            <div class="card-header"><h2>🗑️ Data Management</h2></div>
+            <div class="card-header"><h2> Data Management</h2></div>
             <div class="settings-body actions-body">
-              <button class="btn btn-danger" id="clearLogsBtn">⚠️ Clear All Logs</button>
-              <button class="btn btn-primary" id="exportJsonBtn">📥 Export JSON</button>
+              <button class="btn btn-danger" id="clearLogsBtn"> Clear All Logs</button>
+              <button class="btn btn-primary" id="exportJsonBtn"> Export JSON</button>
               <p class="muted small" id="settingsSaveStatus"></p>
             </div>
           </div>
 
           <div class="card settings-card">
-            <div class="card-header"><h2>💾 Apply Settings</h2></div>
+            <div class="card-header"><h2> Apply Settings</h2></div>
             <div class="settings-body actions-body">
-              <button class="btn btn-success" id="saveSettingsBtn">✅ Save Settings</button>
+              <button class="btn btn-success" id="saveSettingsBtn"> Save Settings</button>
               <p class="muted small" id="settingsSaveMsg"></p>
             </div>
           </div>
