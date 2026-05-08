@@ -17,6 +17,7 @@ import threading
 
 from flask import Flask, send_from_directory, jsonify
 from flask_cors import CORS
+from flask_socketio import SocketIO, emit
 
 # ── Path setup so modules can import config / database ────────────────────────
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -37,6 +38,7 @@ FRONTEND_DIR = os.path.join(
 
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
 CORS(app, origins=config.API["cors_origins"])
+socketio = SocketIO(app, cors_allowed_origins=config.API["cors_origins"])
 
 # ── Register Blueprints ────────────────────────────────────────────────────────
 app.register_blueprint(alerts_bp)
@@ -71,6 +73,17 @@ def health():
     })
 
 
+# ── WebSockets events ──────────────────────────────────────────────────────────
+@socketio.on('connect')
+def handle_connect():
+    print(f"[WS] Client connected")
+    # Initial push
+    emit('update_stats', db.get_summary_stats())
+
+def broadcast_update(event_type, data):
+    """Utility to broadcast updates to all connected clients."""
+    socketio.emit(event_type, data)
+
 # ── Main ───────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     print("""
@@ -89,10 +102,11 @@ if __name__ == "__main__":
 
     # 3. Launch Flask dev server
     print(f"[JalgiNet] Dashboard → http://localhost:{config.API['port']}")
-    app.run(
+    socketio.run(
+        app,
         host=config.API["host"],
         port=config.API["port"],
         debug=config.API["debug"],
         use_reloader=False,   # Reloader conflicts with background threads
-        threaded=True,
+        allow_unsafe_werkzeug=True
     )

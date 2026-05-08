@@ -120,6 +120,14 @@ class PacketCapture:
                     rps = self._pkt_count / max(elapsed, 1)
                     unique_ips = len(self._ip_counters)
                     db.insert_traffic_stat(rps, self._pkt_count, unique_ips)
+
+                    # Update real-time dashboard via WebSocket
+                    try:
+                        from app import socketio
+                        socketio.emit('update_stats', db.get_summary_stats())
+                    except ImportError:
+                        pass
+
                     self.reset_window()
 
                 time.sleep(config.SIMULATION_INTERVAL_SECONDS)

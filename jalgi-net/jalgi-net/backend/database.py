@@ -1,52 +1,97 @@
 """
 JalgiNet – Database Module
 ===========================
-Handles SQLite schema creation, connection management,
-and all CRUD operations for alerts, traffic logs, IDS events,
-and correlated threats.
+Handles SQLite or Supabase (PostgreSQL) schema creation,
+connection management, and all CRUD operations.
 """
 
 import sqlite3
 import json
 import threading
+import os
 from datetime import datetime
-from config import DB_PATH
+from typing import Union
+
+import config
+
+# Conditional import for PostgreSQL
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+    HAS_PSYCOPG2 = True
+except ImportError:
+    HAS_PSYCOPG2 = False
 
 # Thread-local storage for per-thread DB connections
 _local = threading.local()
 
+class DBConnection:
+    """Wrapper to handle both SQLite and PostgreSQL connections."""
+    def __init__(self, use_supabase: bool):
+        self.use_supabase = use_supabase
+        self.conn = None
+        self._setup()
 
-def get_connection() -> sqlite3.Connection:
-    """Return a thread-local SQLite connection with row_factory set."""
-    if not hasattr(_local, "conn") or _local.conn is None:
-        _local.conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-        _local.conn.row_factory = sqlite3.Row  # Rows behave like dicts
-        _local.conn.execute("PRAGMA journal_mode=WAL")  # Better concurrency
-    return _local.conn
+    def _setup(self):
+        if self.use_supabase:
+            if not HAS_PSYCOPG2:
+                raise ImportError("psycopg2-binary is required for Supabase/PostgreSQL.")
+            self.conn = psycopg2.connect(config.SUPABASE_URL)
+            self.conn.autocommit = True
+        else:
+            self.conn = sqlite3.connect(config.DB_PATH, check_same_thread=False)
+            self.conn.row_factory = sqlite3.Row
+            self.conn.execute("PRAGMA journal_mode=WAL")
 
+    def cursor(self):
+        if self.use_supabase:
+            return self.conn.cursor(cursor_factory=RealDictCursor)
+        return self.conn.cursor()
+
+    def execute(self, query: str, params: tuple = ()):
+        # Adapt placeholder from ? (SQLite) to %s (PostgreSQL) if needed
+        if self.use_supabase:
+            query = query.replace("?", "%s")
+            # PostgreSQL doesn't use AUTOINCREMENT but SERIAL/IDENTITY
+            query = query.replace("INTEGER PRIMARY KEY AUTOINCREMENT", "SERIAL PRIMARY KEY")
+
+        cursor = self.cursor()
+        cursor.execute(query, params)
+        return cursor
+
+    def commit(self):
+        if not self.use_supabase:
+            self.conn.commit()
+
+    def close(self):
+        if self.conn:
+            self.conn.close()
+
+def get_connection() -> DBConnection:
+    """Return a thread-local DB connection wrapper."""
+    if not hasattr(_local, "db_conn") or _local.db_conn is None:
+        _local.db_conn = DBConnection(config.USE_SUPABASE)
+    return _local.db_conn
 
 def init_db():
     """Create all tables if they don't already exist."""
-    conn = get_connection()
-    cursor = conn.cursor()
+    db = get_connection()
 
-    # ── Alerts table ──────────────────────────────────────────────────────────
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS alerts (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            type        TEXT NOT NULL,          -- 'DoS' | 'IDS' | 'Correlated'
-            severity    TEXT NOT NULL,          -- 'Low' | 'Medium' | 'High' | 'Critical'
+    # Define table schemas (standard SQL with minor adjustments handled in db.execute)
+    tables = [
+        # Alerts
+        """CREATE TABLE IF NOT EXISTS alerts (
+            id          SERIAL PRIMARY KEY,
+            type        TEXT NOT NULL,
+            severity    TEXT NOT NULL,
             source_ip   TEXT NOT NULL,
             description TEXT NOT NULL,
             timestamp   TEXT NOT NULL,
-            extra       TEXT DEFAULT '{}'       -- JSON blob for extra fields
-        )
-    """)
-
-    # ── Traffic logs table ────────────────────────────────────────────────────
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS traffic_logs (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            extra       TEXT DEFAULT '{}'
+        )""",
+        # Traffic logs
+        """CREATE TABLE IF NOT EXISTS traffic_logs (
+            id          SERIAL PRIMARY KEY,
             source_ip   TEXT NOT NULL,
             dest_ip     TEXT,
             source_port INTEGER,
@@ -54,14 +99,11 @@ def init_db():
             protocol    TEXT,
             packet_size INTEGER,
             timestamp   TEXT NOT NULL,
-            flags       TEXT DEFAULT ''         -- TCP flags if applicable
-        )
-    """)
-
-    # ── IDS events table ──────────────────────────────────────────────────────
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS ids_events (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            flags       TEXT DEFAULT ''
+        )""",
+        # IDS events
+        """CREATE TABLE IF NOT EXISTS ids_events (
+            id          SERIAL PRIMARY KEY,
             attack_type TEXT NOT NULL,
             source_ip   TEXT NOT NULL,
             dest_ip     TEXT,
@@ -71,57 +113,50 @@ def init_db():
             severity    TEXT NOT NULL,
             timestamp   TEXT NOT NULL,
             raw_log     TEXT DEFAULT ''
-        )
-    """)
-
-    # ── Correlated threats table ──────────────────────────────────────────────
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS correlated_threats (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        )""",
+        # Correlated threats
+        """CREATE TABLE IF NOT EXISTS correlated_threats (
+            id          SERIAL PRIMARY KEY,
             source_ip   TEXT NOT NULL,
             risk_score  REAL NOT NULL,
             severity    TEXT NOT NULL,
-            attack_chain TEXT NOT NULL,         -- JSON array of event types
+            attack_chain TEXT NOT NULL,
             description  TEXT NOT NULL,
             first_seen   TEXT NOT NULL,
             last_seen    TEXT NOT NULL,
-            event_ids    TEXT DEFAULT '[]'      -- JSON array of linked alert IDs
-        )
-    """)
-
-    # ── Blocked IPs table ─────────────────────────────────────────────────────
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS blocked_ips (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_ids    TEXT DEFAULT '[]',
+            ai_summary   TEXT,
+            security_impact TEXT,
+            recommended_actions TEXT
+        )""",
+        # Blocked IPs
+        """CREATE TABLE IF NOT EXISTS blocked_ips (
+            id          SERIAL PRIMARY KEY,
             ip          TEXT NOT NULL UNIQUE,
             reason      TEXT,
             blocked_at  TEXT NOT NULL,
             expires_at  TEXT
-        )
-    """)
-
-    # ── Settings table (key-value store) ─────────────────────────────────────
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS settings (
+        )""",
+        # Settings
+        """CREATE TABLE IF NOT EXISTS settings (
             key   TEXT PRIMARY KEY,
             value TEXT NOT NULL
-        )
-    """)
-
-    # ── Traffic stats (aggregated per-minute counters) ────────────────────────
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS traffic_stats (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        )""",
+        # Traffic stats
+        """CREATE TABLE IF NOT EXISTS traffic_stats (
+            id          SERIAL PRIMARY KEY,
             timestamp   TEXT NOT NULL,
-            rps         REAL NOT NULL,          -- Requests per second
+            rps         REAL NOT NULL,
             total_pkts  INTEGER NOT NULL,
             unique_ips  INTEGER NOT NULL
-        )
-    """)
+        )"""
+    ]
 
-    conn.commit()
-    print("[DB] Schema initialized.")
+    for table_sql in tables:
+        db.execute(table_sql)
 
+    db.commit()
+    print(f"[DB] Schema initialized ({'Supabase' if config.USE_SUPABASE else 'SQLite'}).")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ALERT OPERATIONS
@@ -129,7 +164,6 @@ def init_db():
 
 def insert_alert(alert_type: str, severity: str, source_ip: str,
                  description: str, extra: dict = None) -> int:
-    """Insert a new alert and return its ID."""
     conn = get_connection()
     ts = datetime.utcnow().isoformat() + "Z"
     extra_json = json.dumps(extra or {})
@@ -139,12 +173,26 @@ def insert_alert(alert_type: str, severity: str, source_ip: str,
         (alert_type, severity, source_ip, description, ts, extra_json)
     )
     conn.commit()
-    return cursor.lastrowid
 
+    # Broadcast new alert via WebSocket
+    try:
+        from app import socketio
+        socketio.emit('new_alert', {
+            "type": alert_type,
+            "severity": severity,
+            "source_ip": source_ip,
+            "description": description
+        })
+        socketio.emit('update_stats', get_summary_stats())
+    except ImportError:
+        pass
+
+    if config.USE_SUPABASE:
+        return 0 # PostgreSQL SERIAL handles this differently if needed
+    return cursor.lastrowid
 
 def get_alerts(limit: int = 100, offset: int = 0,
                severity: str = None, alert_type: str = None) -> list:
-    """Fetch alerts with optional filters."""
     conn = get_connection()
     query = "SELECT * FROM alerts"
     params = []
@@ -163,18 +211,15 @@ def get_alerts(limit: int = 100, offset: int = 0,
     query += " ORDER BY id DESC LIMIT ? OFFSET ?"
     params += [limit, offset]
 
-    rows = conn.execute(query, params).fetchall()
+    rows = conn.execute(query, tuple(params)).fetchall()
     return [dict(r) for r in rows]
 
-
 def get_alert_counts() -> dict:
-    """Return counts grouped by severity for KPI display."""
     conn = get_connection()
     rows = conn.execute(
         "SELECT severity, COUNT(*) as cnt FROM alerts GROUP BY severity"
     ).fetchall()
     return {r["severity"]: r["cnt"] for r in rows}
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TRAFFIC LOG OPERATIONS
@@ -183,7 +228,6 @@ def get_alert_counts() -> dict:
 def insert_traffic_log(source_ip: str, dest_ip: str, src_port: int,
                        dst_port: int, protocol: str, pkt_size: int,
                        flags: str = "") -> int:
-    """Insert a raw packet capture record."""
     conn = get_connection()
     ts = datetime.utcnow().isoformat() + "Z"
     cursor = conn.execute(
@@ -192,11 +236,9 @@ def insert_traffic_log(source_ip: str, dest_ip: str, src_port: int,
         (source_ip, dest_ip, src_port, dst_port, protocol, pkt_size, ts, flags)
     )
     conn.commit()
-    return cursor.lastrowid
-
+    return 0
 
 def insert_traffic_stat(rps: float, total_pkts: int, unique_ips: int):
-    """Insert an aggregated traffic stat snapshot."""
     conn = get_connection()
     ts = datetime.utcnow().isoformat() + "Z"
     conn.execute(
@@ -206,25 +248,20 @@ def insert_traffic_stat(rps: float, total_pkts: int, unique_ips: int):
     )
     conn.commit()
 
-
 def get_traffic_stats(limit: int = 60) -> list:
-    """Return the last N traffic stat snapshots for charting."""
     conn = get_connection()
     rows = conn.execute(
         "SELECT * FROM traffic_stats ORDER BY id DESC LIMIT ?", (limit,)
     ).fetchall()
     return list(reversed([dict(r) for r in rows]))
 
-
 def get_top_ips_by_traffic(limit: int = 10) -> list:
-    """Return the top IPs by packet count from traffic logs."""
     conn = get_connection()
     rows = conn.execute(
         "SELECT source_ip, COUNT(*) as packet_count FROM traffic_logs "
         "GROUP BY source_ip ORDER BY packet_count DESC LIMIT ?", (limit,)
     ).fetchall()
     return [dict(r) for r in rows]
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # IDS EVENT OPERATIONS
@@ -233,22 +270,19 @@ def get_top_ips_by_traffic(limit: int = 10) -> list:
 def insert_ids_event(attack_type: str, source_ip: str, dest_ip: str,
                      dest_port: int, rule_id: str, rule_msg: str,
                      severity: str, raw_log: str = "") -> int:
-    """Insert a parsed IDS event."""
     conn = get_connection()
     ts = datetime.utcnow().isoformat() + "Z"
-    cursor = conn.execute(
+    conn.execute(
         "INSERT INTO ids_events (attack_type, source_ip, dest_ip, dest_port, "
         "rule_id, rule_msg, severity, timestamp, raw_log) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (attack_type, source_ip, dest_ip, dest_port,
          rule_id, rule_msg, severity, ts, raw_log)
     )
     conn.commit()
-    return cursor.lastrowid
-
+    return 0
 
 def get_ids_events(limit: int = 100, offset: int = 0,
                    attack_type: str = None) -> list:
-    """Fetch IDS events with optional attack_type filter."""
     conn = get_connection()
     query = "SELECT * FROM ids_events"
     params = []
@@ -257,9 +291,8 @@ def get_ids_events(limit: int = 100, offset: int = 0,
         params.append(attack_type)
     query += " ORDER BY id DESC LIMIT ? OFFSET ?"
     params += [limit, offset]
-    rows = conn.execute(query, params).fetchall()
+    rows = conn.execute(query, tuple(params)).fetchall()
     return [dict(r) for r in rows]
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # CORRELATED THREAT OPERATIONS
@@ -267,39 +300,59 @@ def get_ids_events(limit: int = 100, offset: int = 0,
 
 def upsert_correlated_threat(source_ip: str, risk_score: float,
                               severity: str, attack_chain: list,
-                              description: str, event_ids: list) -> int:
-    """Insert or update a correlated threat record for a given source IP."""
+                              description: str, event_ids: list,
+                              ai_data: dict = None) -> int:
     conn = get_connection()
     ts_now = datetime.utcnow().isoformat() + "Z"
-    existing = conn.execute(
-        "SELECT id, first_seen FROM correlated_threats WHERE source_ip = ?",
-        (source_ip,)
+
+    row = conn.execute(
+        "SELECT id FROM correlated_threats WHERE source_ip = ?", (source_ip,)
     ).fetchone()
 
-    if existing:
+    ai_summary = ai_data.get("summary") if ai_data else None
+    ai_impact = ai_data.get("security_impact") if ai_data else None
+    ai_actions = ai_data.get("recommended_actions") if ai_data else None
+
+    if row:
         conn.execute(
             "UPDATE correlated_threats SET risk_score=?, severity=?, attack_chain=?, "
-            "description=?, last_seen=?, event_ids=? WHERE source_ip=?",
+            "description=?, last_seen=?, event_ids=?, ai_summary=?, security_impact=?, "
+            "recommended_actions=? WHERE source_ip=?",
             (risk_score, severity, json.dumps(attack_chain),
-             description, ts_now, json.dumps(event_ids), source_ip)
+             description, ts_now, json.dumps(event_ids), ai_summary, ai_impact, ai_actions, source_ip)
         )
-        threat_id = existing["id"]
+        threat_id = row["id"]
     else:
-        cursor = conn.execute(
+        conn.execute(
             "INSERT INTO correlated_threats (source_ip, risk_score, severity, "
-            "attack_chain, description, first_seen, last_seen, event_ids) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "attack_chain, description, first_seen, last_seen, event_ids, "
+            "ai_summary, security_impact, recommended_actions) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (source_ip, risk_score, severity, json.dumps(attack_chain),
-             description, ts_now, ts_now, json.dumps(event_ids))
+             description, ts_now, ts_now, json.dumps(event_ids),
+             ai_summary, ai_impact, ai_actions)
         )
-        threat_id = cursor.lastrowid
+        threat_id = 0 # Postgres SERIAL handles ID
 
     conn.commit()
+
+    # Broadcast new alert via WebSocket (Correlated threat is also an alert type)
+    if severity in ["High", "Critical"]:
+        try:
+            from app import socketio
+            socketio.emit('new_alert', {
+                "type": "Correlated",
+                "severity": severity,
+                "source_ip": source_ip,
+                "description": description
+            })
+            socketio.emit('update_stats', get_summary_stats())
+        except ImportError:
+            pass
+
     return threat_id
 
-
 def get_correlated_threats(limit: int = 50) -> list:
-    """Return correlated threats ordered by risk score."""
     conn = get_connection()
     rows = conn.execute(
         "SELECT * FROM correlated_threats ORDER BY risk_score DESC LIMIT ?",
@@ -313,70 +366,75 @@ def get_correlated_threats(limit: int = 50) -> list:
         result.append(d)
     return result
 
-
 # ─────────────────────────────────────────────────────────────────────────────
 # BLOCKED IPs OPERATIONS
 # ─────────────────────────────────────────────────────────────────────────────
 
 def block_ip(ip: str, reason: str, duration_minutes: int = 60):
-    """Add an IP to the simulated block list."""
     from datetime import timedelta
     conn = get_connection()
     now = datetime.utcnow()
     expires = (now + timedelta(minutes=duration_minutes)).isoformat() + "Z"
-    conn.execute(
-        "INSERT OR REPLACE INTO blocked_ips (ip, reason, blocked_at, expires_at) "
-        "VALUES (?, ?, ?, ?)",
-        (ip, reason, now.isoformat() + "Z", expires)
-    )
+
+    # PostgreSQL doesn't support INSERT OR REPLACE, use ON CONFLICT
+    if config.USE_SUPABASE:
+        conn.execute(
+            "INSERT INTO blocked_ips (ip, reason, blocked_at, expires_at) "
+            "VALUES (?, ?, ?, ?) ON CONFLICT (ip) DO UPDATE SET "
+            "reason=EXCLUDED.reason, blocked_at=EXCLUDED.blocked_at, expires_at=EXCLUDED.expires_at",
+            (ip, reason, now.isoformat() + "Z", expires)
+        )
+    else:
+        conn.execute(
+            "INSERT OR REPLACE INTO blocked_ips (ip, reason, blocked_at, expires_at) "
+            "VALUES (?, ?, ?, ?)",
+            (ip, reason, now.isoformat() + "Z", expires)
+        )
     conn.commit()
 
-
 def get_blocked_ips() -> list:
-    """Return all currently blocked IPs."""
     conn = get_connection()
     rows = conn.execute(
         "SELECT * FROM blocked_ips ORDER BY blocked_at DESC"
     ).fetchall()
     return [dict(r) for r in rows]
 
-
 def unblock_ip(ip: str):
-    """Remove an IP from the block list."""
     conn = get_connection()
     conn.execute("DELETE FROM blocked_ips WHERE ip = ?", (ip,))
     conn.commit()
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SETTINGS OPERATIONS
 # ─────────────────────────────────────────────────────────────────────────────
 
 def get_setting(key: str, default=None) -> str:
-    """Get a setting value by key."""
     conn = get_connection()
     row = conn.execute(
         "SELECT value FROM settings WHERE key = ?", (key,)
     ).fetchone()
     return row["value"] if row else default
 
-
 def set_setting(key: str, value: str):
-    """Upsert a setting value."""
     conn = get_connection()
-    conn.execute(
-        "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
-        (key, str(value))
-    )
+    if config.USE_SUPABASE:
+        conn.execute(
+            "INSERT INTO settings (key, value) VALUES (?, ?) "
+            "ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value",
+            (key, str(value))
+        )
+    else:
+        conn.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
+            (key, str(value))
+        )
     conn.commit()
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MAINTENANCE OPERATIONS
 # ─────────────────────────────────────────────────────────────────────────────
 
 def clear_all_logs():
-    """Wipe all time-series data (alerts, logs, stats, threats)."""
     conn = get_connection()
     for table in ["alerts", "traffic_logs", "ids_events",
                   "correlated_threats", "traffic_stats"]:
@@ -384,19 +442,27 @@ def clear_all_logs():
     conn.commit()
     print("[DB] All logs cleared.")
 
-
 def get_summary_stats() -> dict:
-    """Return dashboard KPIs in a single query batch."""
     conn = get_connection()
-    total_alerts = conn.execute("SELECT COUNT(*) FROM alerts").fetchone()[0]
+    total_alerts = conn.execute("SELECT COUNT(*) FROM alerts").fetchone()
+    total_alerts = total_alerts[0] if total_alerts else 0
+
     active_threats = conn.execute(
         "SELECT COUNT(*) FROM correlated_threats WHERE risk_score >= 5"
-    ).fetchone()[0]
-    blocked_count = conn.execute("SELECT COUNT(*) FROM blocked_ips").fetchone()[0]
-    ids_events = conn.execute("SELECT COUNT(*) FROM ids_events").fetchone()[0]
+    ).fetchone()
+    active_threats = active_threats[0] if active_threats else 0
+
+    blocked_count = conn.execute("SELECT COUNT(*) FROM blocked_ips").fetchone()
+    blocked_count = blocked_count[0] if blocked_count else 0
+
+    ids_events = conn.execute("SELECT COUNT(*) FROM ids_events").fetchone()
+    ids_events = ids_events[0] if ids_events else 0
+
     critical_alerts = conn.execute(
         "SELECT COUNT(*) FROM alerts WHERE severity = 'Critical'"
-    ).fetchone()[0]
+    ).fetchone()
+    critical_alerts = critical_alerts[0] if critical_alerts else 0
+
     severity_counts = get_alert_counts()
 
     latest_stat = conn.execute(
