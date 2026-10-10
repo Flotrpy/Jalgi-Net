@@ -6,7 +6,7 @@
 function buildChainHTML(chain) {
   if (!chain || !chain.length) return '<span style="color:var(--text-muted)">—</span>';
   return chain.map((item, i) =>
-    `<span class="chain-item">${item.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span>` +
+    `<span class="chain-item">${esc(item.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))}</span>` +
     (i < chain.length - 1 ? '<span class="chain-arrow">→</span>' : '')
   ).join('');
 }
