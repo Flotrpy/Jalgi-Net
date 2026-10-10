@@ -10,19 +10,19 @@ let lastAlertId         = 0;
 
 function buildAlertHTML(a) {
   return `
-    <div class="alert-item ${a.severity}" id="alert-${a.id}">
+    <div class="alert-item ${esc(a.severity)}" id="alert-${esc(a.id)}">
       <div class="alert-body">
         <div class="alert-badges">
-          <span class="severity-badge ${a.severity}">${a.severity}</span>
-          <span class="type-badge ${a.type}">${a.type}</span>
+          <span class="severity-badge ${esc(a.severity)}">${esc(a.severity)}</span>
+          <span class="type-badge ${esc(a.type)}">${esc(a.type)}</span>
         </div>
-        <div class="alert-desc">${a.description}</div>
+        <div class="alert-desc">${esc(a.description)}</div>
         <div class="alert-meta">
-          <span class="alert-ip">⬡ ${a.source_ip}</span>
+          <span class="alert-ip">⬡ ${esc(a.source_ip)}</span>
           <span>${formatTimestamp(a.timestamp)}</span>
         </div>
       </div>
-      <button class="alert-action-btn" onclick="blockAlertIp('${a.source_ip}')">⛔ Block</button>
+      <button class="alert-action-btn" data-ip="${esc(a.source_ip)}" onclick="blockAlertIp(this.dataset.ip)">⛔ Block</button>
     </div>`;
 }
 

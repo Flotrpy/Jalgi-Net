@@ -19,14 +19,14 @@ function getAttackPillClass(type) {
 function buildIdsRow(e, i) {
   const pillClass = getAttackPillClass(e.attack_type);
   return `<tr>
-    <td>${e.id}</td>
+    <td>${esc(e.id)}</td>
     <td>${formatTimestamp(e.timestamp)}</td>
-    <td><span class="attack-pill ${pillClass}">${e.attack_type}</span></td>
-    <td class="ip-cell">${e.source_ip}</td>
-    <td class="ip-cell">${e.dest_ip || '—'}:${e.dest_port || '—'}</td>
-    <td class="rule-cell">${e.rule_id || '—'}</td>
-    <td class="msg-cell" title="${e.rule_msg}">${e.rule_msg || '—'}</td>
-    <td><span class="severity-badge ${e.severity}">${e.severity}</span></td>
+    <td><span class="attack-pill ${pillClass}">${esc(e.attack_type)}</span></td>
+    <td class="ip-cell">${esc(e.source_ip)}</td>
+    <td class="ip-cell">${esc(e.dest_ip || '—')}:${esc(e.dest_port || '—')}</td>
+    <td class="rule-cell">${esc(e.rule_id || '—')}</td>
+    <td class="msg-cell" title="${esc(e.rule_msg)}">${esc(e.rule_msg || '—')}</td>
+    <td><span class="severity-badge ${esc(e.severity)}">${esc(e.severity)}</span></td>
   </tr>`;
 }
 
@@ -36,7 +36,7 @@ async function loadAttackTypeFilters() {
   const container = document.getElementById('attackTypeFilters');
   if (!container) return;
   const extra = data.attack_types.map(t =>
-    `<button class="filter-btn" data-attack="${t.attack_type}">${t.attack_type} <span style="opacity:.6">(${t.count})</span></button>`
+    `<button class="filter-btn" data-attack="${esc(t.attack_type)}">${esc(t.attack_type)} <span style="opacity:.6">(${t.count})</span></button>`
   ).join('');
   container.innerHTML = `<button class="filter-btn active" data-attack="">All Types</button>${extra}`;
   container.querySelectorAll('.filter-btn').forEach(btn => {

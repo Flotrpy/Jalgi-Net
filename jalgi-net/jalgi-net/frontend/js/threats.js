@@ -19,34 +19,34 @@ function buildThreatCard(t) {
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; color:var(--cyan); font-weight:600; font-size:0.8rem;">
         <i data-lucide="sparkles" style="width:14px; height:14px;"></i> AI SECURITY SUMMARY
       </div>
-      <p style="font-size:0.8rem; color:var(--text-primary); margin-bottom:8px;">${t.ai_summary}</p>
+      <p style="font-size:0.8rem; color:var(--text-primary); margin-bottom:8px;">${esc(t.ai_summary)}</p>
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:0.75rem;">
         <div>
           <div style="color:var(--red); font-weight:600; margin-bottom:2px;">SECURITY IMPACT</div>
-          <div style="color:var(--text-secondary)">${t.security_impact || 'N/A'}</div>
+          <div style="color:var(--text-secondary)">${esc(t.security_impact || 'N/A')}</div>
         </div>
         <div>
           <div style="color:var(--green); font-weight:600; margin-bottom:2px;">RECOMMENDED ACTIONS</div>
-          <div style="color:var(--text-secondary)">${t.recommended_actions || 'N/A'}</div>
+          <div style="color:var(--text-secondary)">${esc(t.recommended_actions || 'N/A')}</div>
         </div>
       </div>
     </div>
   ` : '';
 
   return `
-    <div class="threat-card ${t.severity}">
+    <div class="threat-card ${esc(t.severity)}">
       <div class="threat-card-header">
         <div>
-          <div class="threat-ip">⬡ ${t.source_ip}</div>
-          <span class="severity-badge ${t.severity}" style="margin-top:6px;display:inline-block">${t.severity}</span>
+          <div class="threat-ip">⬡ ${esc(t.source_ip)}</div>
+          <span class="severity-badge ${esc(t.severity)}" style="margin-top:6px;display:inline-block">${esc(t.severity)}</span>
         </div>
-        <div class="risk-score-badge ${t.severity}">
+        <div class="risk-score-badge ${esc(t.severity)}">
           <span class="risk-score-num">${scoreFixed}</span>
           <span class="risk-score-label">RISK / 10</span>
         </div>
       </div>
       <div class="threat-card-body">
-        <p class="threat-desc">${t.description}</p>
+        <p class="threat-desc">${esc(t.description)}</p>
         <div class="attack-chain">${buildChainHTML(t.attack_chain)}</div>
         <div class="threat-timeline">
           <span><b>First Seen</b>${formatTimestamp(t.first_seen)}</span>
@@ -54,7 +54,7 @@ function buildThreatCard(t) {
           <span><b>Events</b>${(t.event_ids || []).length} linked</span>
         </div>
         ${aiSection}
-        <button class="threat-block-btn" onclick="blockThreatIp('${t.source_ip}')">⛔ Block ${t.source_ip}</button>
+        <button class="threat-block-btn" data-ip="${esc(t.source_ip)}" onclick="blockThreatIp(this.dataset.ip)">⛔ Block ${esc(t.source_ip)}</button>
       </div>
     </div>`;
 }
