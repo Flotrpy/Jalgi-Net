@@ -78,7 +78,7 @@ function buildDeviceCard(d) {
 
   const aiSummary = (t && t.ai_summary) ? `
     <div style="margin-top:10px; font-size:0.75rem; color:var(--text-secondary); background:rgba(0,212,255,0.05); padding:8px; border-radius:4px; border: 1px solid rgba(0,212,255,0.1);">
-      <b style="color:var(--cyan)">AI Profile:</b> ${t.ai_summary}
+      <b style="color:var(--cyan)">AI Profile:</b> ${esc(t.ai_summary)}
     </div>
   ` : '';
 
@@ -90,7 +90,7 @@ function buildDeviceCard(d) {
             <i data-lucide="server" style="width:20px; height:20px;"></i>
           </div>
           <div>
-            <div style="font-family:var(--font-mono); font-weight:700; color:var(--text-primary); font-size:1rem;">${d.ip}</div>
+            <div style="font-family:var(--font-mono); font-weight:700; color:var(--text-primary); font-size:1rem;">${esc(d.ip)}</div>
             <div style="font-size:0.75rem; color:var(--text-muted);">${d.packetCount} packets detected</div>
           </div>
         </div>

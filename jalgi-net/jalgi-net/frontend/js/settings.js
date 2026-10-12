@@ -103,9 +103,9 @@ async function loadBlockedIps() {
   }
   container.innerHTML = ips.map(entry => `
     <div class="blocked-ip-row">
-      <span class="blocked-ip-addr">⛔ ${entry.ip}</span>
-      <span style="color:var(--text-muted);font-size:0.7rem">${entry.reason || ''}</span>
-      <button class="unblock-btn" onclick="unblockIp('${entry.ip}')">Unblock</button>
+      <span class="blocked-ip-addr">⛔ ${esc(entry.ip)}</span>
+      <span style="color:var(--text-muted);font-size:0.7rem">${esc(entry.reason || '')}</span>
+      <button class="unblock-btn" data-ip="${esc(entry.ip)}" onclick="unblockIp(this.dataset.ip)">Unblock</button>
     </div>`).join('');
 }
 

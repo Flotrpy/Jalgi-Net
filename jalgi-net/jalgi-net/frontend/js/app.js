@@ -28,6 +28,12 @@ async function apiFetch(path, options = {}) {
 }
 window.apiFetch = apiFetch;
 
+// Escape untrusted text (alert/IDS fields come from network traffic) before innerHTML.
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+window.esc = esc;
+
 // ── Tab routing ───────────────────────────────────────────────────────────────
 const TAB_TITLES = {
   overview: ['Overview',            'Real-time network threat monitoring'],
@@ -148,8 +154,8 @@ function showToast(title, message, severity = 'info', duration = 5000) {
   toast.className = `toast ${severity}`;
   toast.innerHTML = `
     <div style="flex:1">
-      <div class="toast-title">${title}</div>
-      <div class="toast-msg">${message}</div>
+      <div class="toast-title">${esc(title)}</div>
+      <div class="toast-msg">${esc(message)}</div>
     </div>
     <button class="toast-close" onclick="this.closest('.toast').remove()">✕</button>
   `;

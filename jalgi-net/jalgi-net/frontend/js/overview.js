@@ -155,8 +155,8 @@ function renderRecentCritical(alerts) {
   }
   ul.innerHTML = critical.map(a => `
     <li class="mini-alert-item">
-      <div class="mini-alert-ip">${a.source_ip}</div>
-      <div class="mini-alert-desc">${a.description.substring(0, 72)}…</div>
+      <div class="mini-alert-ip">${esc(a.source_ip)}</div>
+      <div class="mini-alert-desc">${esc(a.description.substring(0, 72))}…</div>
       <div class="mini-alert-time">${formatTimestamp(a.timestamp)}</div>
     </li>`).join('');
 }
